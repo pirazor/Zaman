@@ -10,9 +10,17 @@ describe('dictionaries', () => {
   });
 
   it.each(LANGUAGES)('%s leaves no string empty', (language) => {
+    // `duration_separator` is punctuation and is whitespace-only in English
+    // and Turkish by design, so it is the one key exempt from this check.
     for (const [key, value] of Object.entries(dictionaries[language])) {
+      if (key === 'duration_separator') continue;
       expect(`${key}: ${value.trim()}`).not.toBe(`${key}: `);
     }
+  });
+
+  it.each(LANGUAGES)('%s separates the parts of a duration', (language) => {
+    // Whitespace-only is fine; missing entirely would run the numbers together.
+    expect(dictionaries[language].duration_separator).not.toBe('');
   });
 
   it.each(LANGUAGES)('%s keeps the placeholders each string needs', (language) => {

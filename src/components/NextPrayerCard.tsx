@@ -3,8 +3,10 @@ import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useApp } from '../state/AppProvider';
+import { describeRemaining, unitLabel } from '../i18n';
+import { splitRemaining } from '../lib/duration';
 import type { UpcomingPrayer } from '../lib/prayer';
-import { formatCountdown, formatTime } from '../lib/time';
+import { formatTime } from '../lib/time';
 import { fontSize, radius, shadow, spacing } from '../theme';
 import { Text } from './Text';
 
@@ -20,11 +22,13 @@ export interface NextPrayerCardProps {
  * openings it is the only thing the user came to see.
  */
 export function NextPrayerCard({ next, msRemaining }: NextPrayerCardProps) {
-  const { colors, t, timeFormat, isRTL } = useApp();
+  const { colors, t, timeFormat, isRTL, language } = useApp();
 
   const name = t(`prayer_${next.slot}`);
   const at = formatTime(next.time, timeFormat);
-  const countdown = formatCountdown(msRemaining);
+
+  const segments = splitRemaining(msRemaining);
+  const spoken = describeRemaining(language, segments);
 
   return (
     <LinearGradient
@@ -60,19 +64,38 @@ export function NextPrayerCard({ next, msRemaining }: NextPrayerCardProps) {
 
       <View style={[styles.divider, { backgroundColor: colors.onPrimaryMuted }]} />
 
-      <Text
-        variant="display"
-        weight="700"
-        tabular
-        color={colors.onPrimary}
-        align="center"
-        style={styles.countdown}
-        // Read as "2 hours 14 minutes" rather than the digit string, and only
-        // re-announced when the caller changes it.
-        accessibilityLabel={`${t('home_timeLeft')}: ${countdown}`}
+      {/*
+        Named units rather than a "1:33:00" clock face: the digits carry the
+        size, the words carry the meaning. The row wraps to a second line
+        rather than shrinking, so a long span or an enlarged system font
+        stays at full size.
+      */}
+      <View
+        style={[styles.countdown, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+        accessible
+        accessibilityRole="text"
+        accessibilityLabel={`${t('home_timeLeft')}: ${spoken}`}
       >
-        {countdown}
-      </Text>
+        {segments.length === 0 ? (
+          <Text variant="display" weight="700" color={colors.onPrimary}>
+            {t('home_now')}
+          </Text>
+        ) : (
+          segments.map((segment) => (
+            <View
+              key={segment.unit}
+              style={[styles.segment, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+            >
+              <Text variant="display" weight="700" tabular color={colors.onPrimary}>
+                {segment.value}
+              </Text>
+              <Text variant="heading" weight="600" color={colors.onPrimaryMuted}>
+                {unitLabel(language, segment.unit, segment.value)}
+              </Text>
+            </View>
+          ))
+        )}
+      </View>
 
       <Text variant="label" color={colors.onPrimaryMuted} align="center">
         {t('home_timeLeft')}
@@ -107,6 +130,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   countdown: {
-    lineHeight: fontSize.display * 1.1,
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    columnGap: spacing.md,
+    rowGap: spacing.xs,
+    minHeight: fontSize.display * 1.15,
+  },
+  segment: {
+    alignItems: 'baseline',
+    columnGap: spacing.sm,
   },
 });

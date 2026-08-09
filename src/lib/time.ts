@@ -33,21 +33,6 @@ export function formatTime(date: Date, format: TimeFormat): string {
   return `${hour12}:${minutes} ${suffix}`;
 }
 
-/**
- * Countdown text: `1:23:45` past an hour, `23:45` under one. Hours are not
- * zero-padded so the display does not jump width when crossing 10 hours.
- */
-export function formatCountdown(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  return hours > 0
-    ? `${hours}:${pad(minutes)}:${pad(seconds)}`
-    : `${pad(minutes)}:${pad(seconds)}`;
-}
-
 const DATE_LOCALES: Record<Language, string> = {
   en: 'en-GB',
   tr: 'tr-TR',

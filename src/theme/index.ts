@@ -81,11 +81,15 @@ const dark: Palette = {
 export const palettes: Record<ColorScheme, Palette> = { light, dark };
 
 /**
- * Font sizes. `display` is the countdown on the home screen; `body` is the
- * smallest size used for anything a user actually needs to read.
+ * Font sizes. `display` is the countdown numerals on the home screen; `body`
+ * is the smallest size used for anything a user actually needs to read.
+ *
+ * `display` is sized so that "1 hour 33 minutes" — numerals at this size, unit
+ * names at `heading` — fits one line on a 393pt screen. Longer spans wrap to a
+ * second line rather than shrinking.
  */
 export const fontSize = {
-  display: 60,
+  display: 52,
   title: 34,
   heading: 26,
   prayer: 24,

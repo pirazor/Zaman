@@ -34,6 +34,21 @@ const en = {
   home_next: 'Next prayer',
   home_timeLeft: 'Time remaining',
   home_now: 'Now',
+
+  // Unit names for the countdown, by plural category. English inflects on
+  // one/other; `few` is unused here and mirrors the plural.
+  duration_hour_one: 'hour',
+  duration_hour_few: 'hours',
+  duration_hour_many: 'hours',
+  duration_minute_one: 'minute',
+  duration_minute_few: 'minutes',
+  duration_minute_many: 'minutes',
+  duration_second_one: 'second',
+  duration_second_few: 'seconds',
+  duration_second_many: 'seconds',
+  /** Joins the two parts of a spoken duration. */
+  duration_separator: ' ',
+
   home_tomorrow: 'Tomorrow',
   home_locating: 'Finding your location…',
   home_calculating: 'Calculating prayer times…',
@@ -137,6 +152,20 @@ const tr: Translations = {
   home_next: 'Sıradaki vakit',
   home_timeLeft: 'Kalan süre',
   home_now: 'Şu an',
+
+  // Turkish nouns do not take a plural suffix after a numeral: "3 saat",
+  // never "3 saatler". Every category is therefore the same word.
+  duration_hour_one: 'saat',
+  duration_hour_few: 'saat',
+  duration_hour_many: 'saat',
+  duration_minute_one: 'dakika',
+  duration_minute_few: 'dakika',
+  duration_minute_many: 'dakika',
+  duration_second_one: 'saniye',
+  duration_second_few: 'saniye',
+  duration_second_many: 'saniye',
+  duration_separator: ' ',
+
   home_tomorrow: 'Yarın',
   home_locating: 'Konumunuz bulunuyor…',
   home_calculating: 'Vakitler hesaplanıyor…',
@@ -237,6 +266,23 @@ const ar: Translations = {
   home_next: 'الصلاة القادمة',
   home_timeLeft: 'الوقت المتبقي',
   home_now: 'الآن',
+
+  // Arabic counts 3–10 with the plural (٥ ساعات) and everything else with the
+  // singular (١ ساعة، ٤٥ دقيقة). The dual is deliberately not used: after an
+  // explicit numeral, interface text takes the singular — "٢ ساعة", the same
+  // convention iOS and Android use in Arabic.
+  duration_hour_one: 'ساعة',
+  duration_hour_few: 'ساعات',
+  duration_hour_many: 'ساعة',
+  duration_minute_one: 'دقيقة',
+  duration_minute_few: 'دقائق',
+  duration_minute_many: 'دقيقة',
+  duration_second_one: 'ثانية',
+  duration_second_few: 'ثوانٍ',
+  duration_second_many: 'ثانية',
+  // Arabic joins with wāw, written attached to the word that follows it.
+  duration_separator: ' و',
+
   home_tomorrow: 'غداً',
   home_locating: 'جارٍ تحديد موقعك…',
   home_calculating: 'جارٍ حساب أوقات الصلاة…',
