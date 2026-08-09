@@ -1,0 +1,5 @@
+{
+  "CFBundleDisplayName": "زمان",
+  "NSLocationWhenInUseUsageDescription": "يستخدم تطبيق زمان موقعك لحساب أوقات الصلاة واتجاه القبلة بدقة. لا يغادر موقعك هاتفك أبداً.",
+  "NSMotionUsageDescription": "يستخدم تطبيق زمان مستشعر البوصلة لتوجيهك نحو القبلة."
+}

@@ -1,0 +1,5 @@
+{
+  "CFBundleDisplayName": "Zaman",
+  "NSLocationWhenInUseUsageDescription": "Zaman uses your location to calculate accurate prayer times and the Qibla direction. Your location never leaves your phone.",
+  "NSMotionUsageDescription": "Zaman uses the compass sensor to point you toward the Qibla."
+}
