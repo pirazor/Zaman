@@ -19,6 +19,7 @@ import {
   type Language,
   type Translate,
 } from '../i18n';
+import { cityById, cityPosition, type City } from '../lib/cities';
 import {
   captureLocation,
   isFresh,
@@ -70,8 +71,12 @@ interface AppContextValue {
   place: CachedPlace | undefined;
   position: Position | undefined;
   locationStatus: LocationStatus;
+  /** Set when the user picked a city by hand instead of using GPS. */
+  manualCity: City | undefined;
 
   setLanguage: (language: Language) => void;
+  /** Chooses a city by id, or `undefined` to return to automatic location. */
+  setManualCity: (cityId: string | undefined) => void;
   setMethod: (method: CalculationMethodKey | undefined) => void;
   setMadhab: (madhab: MadhabKey) => void;
   setTimeFormat: (format: TimeFormat) => void;
@@ -124,12 +129,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const scheme: ColorScheme = systemScheme === 'dark' ? 'dark' : 'light';
   const colors = palettes[scheme];
 
+  const manualCity = cityById(state.manualCityId);
+
+  // A hand-picked city overrides the GPS fix everywhere: times, Qibla and the
+  // place shown on the home screen all follow it, exactly like a fix would.
+  const place: CachedPlace | undefined = manualCity
+    ? {
+        ...cityPosition(manualCity),
+        label: manualCity.names[language],
+        capturedAt: 0,
+      }
+    : state.place;
+
   // A GPS fix knows where the user actually is; the phone's locale only knows
   // how it is configured. Prefer the former when choosing regional defaults.
   const region = state.place?.region ?? localeRegion;
 
   const methodIsAutomatic = state.method === undefined;
-  const method = state.method ?? defaultMethodForRegion(region);
+  // Automatic follows the place the timetable is for: the chosen city's own
+  // authority when one is set, the region's otherwise.
+  const method =
+    state.method ?? (manualCity ? manualCity.method : defaultMethodForRegion(region));
   const timeFormat = state.timeFormat ?? defaultTimeFormat(region);
 
   const prayerSettings = useMemo<PrayerSettings>(
@@ -137,7 +157,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [method, state.madhab],
   );
 
-  const position = state.place ? toPosition(state.place) : undefined;
+  const position = place ? toPosition(place) : undefined;
 
   const refreshLocation = useCallback(async (): Promise<LocationStatus> => {
     setLocationStatus('requesting');
@@ -148,18 +168,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [update]);
 
   // Capture a fix on launch, reusing a recent one so the timetable is on screen
-  // immediately rather than after a GPS round trip.
+  // immediately rather than after a GPS round trip. With a manual city chosen
+  // there is nothing to capture — and no permission prompt to spring.
   const didAutoLocate = useRef(false);
   useEffect(() => {
     if (!ready || didAutoLocate.current) return;
     didAutoLocate.current = true;
+
+    if (state.manualCityId) return;
 
     if (isFresh(state.place)) {
       setLocationStatus('granted');
       return;
     }
     void refreshLocation();
-  }, [ready, state.place, refreshLocation]);
+  }, [ready, state.manualCityId, state.place, refreshLocation]);
 
   // Keep the reminder queue in step with everything it depends on. Re-running
   // on each change is cheap and is what guarantees reminders never reflect a
@@ -179,8 +202,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     ready,
-    state.place?.latitude,
-    state.place?.longitude,
+    position?.latitude,
+    position?.longitude,
     prayerSettings,
     language,
     timeFormat,
@@ -205,10 +228,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       timeFormat,
       notificationsEnabled: state.notificationsEnabled,
       reminderMinutes: state.reminderMinutes,
-      place: state.place,
+      place,
       position,
       locationStatus,
+      manualCity,
       setLanguage: (next) => update({ language: next }),
+      setManualCity: (cityId) => update({ manualCityId: cityId }),
       setMethod: (next) => update({ method: next }),
       setMadhab: (next) => update({ madhab: next }),
       setTimeFormat: (next) => update({ timeFormat: next }),

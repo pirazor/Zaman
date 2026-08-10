@@ -21,7 +21,9 @@ Google Play. Free on both.
   delivered as a local notification that works with the phone offline.
 - **English, Turkish and Arabic**, including right-to-left layout for Arabic.
 - **Automatic location**, captured once on launch and cached — not tracked
-  continuously.
+  continuously. Or pick any of ~140 cities by hand from an offline,
+  diacritic-insensitive search in three scripts; a chosen city drives times,
+  Qibla and the calculation method exactly like a GPS fix.
 
 ## Designed to be usable by anyone
 
@@ -38,9 +40,10 @@ experience of smartphones, which drove most of the interface decisions:
 - Selection is shown by a tick *and* a tinted background, so it survives
   colour-blindness and a dimmed screen. All foreground/background pairs meet
   WCAG AA contrast.
-- The Qibla instruction is physical ("turn right" / "you are facing the Qibla"),
-  not numerical. The bearing in degrees is there for anyone who wants it, but
-  nobody has to read it.
+- The Qibla instruction is physical, not numerical: turn until the Kaaba on the
+  dial meets the arrow, with a dotted arc showing how far is left to go. The
+  small print gives a compass direction in words ("Makkah is to the
+  northeast"), never raw degrees.
 - Every setting has a working default, so Settings is entirely optional.
 
 ## Default language by region
@@ -176,7 +179,7 @@ src/
   components/              Text, Button, Card, PrayerRow, CompassDial, …
   hooks/                   useNow (ticking clock), useCompassHeading
   i18n/                    Translations and the region → language rule
-  lib/                     prayer, qibla, location, notifications, time, storage
+  lib/                     prayer, qibla, cities, location, notifications, time, storage
   state/AppProvider.tsx    Settings, location and the reminder queue
   theme/                   Colour, type scale and spacing tokens
 __tests__/                 Unit tests for the pure logic

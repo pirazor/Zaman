@@ -99,6 +99,8 @@ const en = {
   settings_timeFormat_12: '12-hour',
   settings_timeFormat_24: '24-hour',
   settings_location: 'Location',
+  settings_cityAuto: 'Automatic (your location)',
+  settings_searchCity: 'Search for a city…',
   settings_refreshLocation: 'Update my location',
   settings_about: 'About Zaman',
   settings_aboutBody:
@@ -224,6 +226,8 @@ const tr: Translations = {
   settings_timeFormat_12: '12 saat',
   settings_timeFormat_24: '24 saat',
   settings_location: 'Konum',
+  settings_cityAuto: 'Otomatik (konumunuz)',
+  settings_searchCity: 'Şehir arayın…',
   settings_refreshLocation: 'Konumumu güncelle',
   settings_about: 'Zaman hakkında',
   settings_aboutBody:
@@ -347,6 +351,8 @@ const ar: Translations = {
   settings_timeFormat_12: '12 ساعة',
   settings_timeFormat_24: '24 ساعة',
   settings_location: 'الموقع',
+  settings_cityAuto: 'تلقائي (موقعك)',
+  settings_searchCity: 'ابحث عن مدينة…',
   settings_refreshLocation: 'تحديث موقعي',
   settings_about: 'عن زمان',
   settings_aboutBody:

@@ -31,6 +31,11 @@ export interface PersistedState {
   notificationsEnabled: boolean;
   reminderMinutes: number;
   place?: CachedPlace;
+  /**
+   * Id of a manually chosen city from `cities.ts`; `undefined` means the
+   * location is automatic (GPS). A manual city overrides `place` everywhere.
+   */
+  manualCityId?: string;
 }
 
 export const DEFAULT_STATE: PersistedState = {
