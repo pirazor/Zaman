@@ -105,7 +105,7 @@ export async function syncReminders(options: SyncOptions): Promise<number> {
         }),
         body: t('notification_body', {
           prayer: prayerName,
-          time: formatTime(reminder.prayerTime, options.timeFormat),
+          time: formatTime(reminder.prayerTime, options.timeFormat, options.language),
         }),
         sound: 'default',
         data: { slot: reminder.slot, prayerTime: reminder.prayerTime.toISOString() },

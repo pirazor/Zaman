@@ -21,14 +21,24 @@ export function defaultTimeFormat(region: string | undefined): TimeFormat {
   return region && TWELVE_HOUR_REGIONS.has(region.toUpperCase()) ? '12h' : '24h';
 }
 
-/** e.g. `18:42` or `6:42 PM`. */
-export function formatTime(date: Date, format: TimeFormat): string {
+/**
+ * Meridiem markers by language. Turkish reads öğleden önce/sonra as ÖÖ/ÖS;
+ * Arabic uses ص (صباحاً) and م (مساءً).
+ */
+const MERIDIEM: Record<Language, [am: string, pm: string]> = {
+  en: ['AM', 'PM'],
+  tr: ['ÖÖ', 'ÖS'],
+  ar: ['ص', 'م'],
+};
+
+/** e.g. `18:42`, `6:42 PM`, `6:42 ÖS`, `6:42 م`. */
+export function formatTime(date: Date, format: TimeFormat, language: Language): string {
   const hours = date.getHours();
   const minutes = pad(date.getMinutes());
 
   if (format === '24h') return `${pad(hours)}:${minutes}`;
 
-  const suffix = hours < 12 ? 'AM' : 'PM';
+  const suffix = MERIDIEM[language][hours < 12 ? 0 : 1];
   const hour12 = hours % 12 === 0 ? 12 : hours % 12;
   return `${hour12}:${minutes} ${suffix}`;
 }

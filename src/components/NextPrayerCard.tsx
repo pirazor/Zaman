@@ -25,7 +25,7 @@ export function NextPrayerCard({ next, msRemaining }: NextPrayerCardProps) {
   const { colors, t, timeFormat, isRTL, language } = useApp();
 
   const name = t(`prayer_${next.slot}`);
-  const at = formatTime(next.time, timeFormat);
+  const at = formatTime(next.time, timeFormat, language);
 
   const segments = splitRemaining(msRemaining);
   const spoken = describeRemaining(language, segments);
