@@ -7,20 +7,40 @@ import { CompassDial } from '../../src/components/CompassDial';
 import { Screen } from '../../src/components/Screen';
 import { Text } from '../../src/components/Text';
 import { useCompassHeading } from '../../src/hooks/useCompassHeading';
-import { distanceToKaabaKm, isAligned, qiblaBearing, turnAngle } from '../../src/lib/qibla';
+import type { TranslationKey } from '../../src/i18n';
+import {
+  distanceToKaabaKm,
+  isAligned,
+  qiblaBearing,
+  turnAngle,
+  windIndex,
+} from '../../src/lib/qibla';
 import { useApp } from '../../src/state/AppProvider';
-import { spacing } from '../../src/theme';
+import { radius, spacing } from '../../src/theme';
+
+/** Eight-wind names in clockwise order, matching `windIndex`. */
+const WIND_KEYS: readonly TranslationKey[] = [
+  'dir_north',
+  'dir_northeast',
+  'dir_east',
+  'dir_southeast',
+  'dir_south',
+  'dir_southwest',
+  'dir_west',
+  'dir_northwest',
+];
 
 /**
  * The Qibla screen.
  *
- * The instruction is physical, not numerical: turn until the gold Kaaba meets
- * the pointer at the top. The bearing in degrees is shown underneath for
- * anyone who wants it, and a short vibration confirms alignment so the screen
- * does not have to be watched while turning.
+ * The instruction is physical, not numerical: turn until the Kaaba on the
+ * dial meets the arrow, watching the dotted arc between them shrink. The
+ * guidance pill spells out the move in words, the readout gives the compass
+ * direction and distance for anyone who wants it, and a short vibration
+ * confirms alignment so the screen does not have to be watched while turning.
  */
 export default function QiblaScreen() {
-  const { position, t, colors } = useApp();
+  const { position, t, colors, isRTL, language } = useApp();
   const { width } = useWindowDimensions();
   const compass = useCompassHeading();
 
@@ -71,6 +91,14 @@ export default function QiblaScreen() {
       ? t('qibla_turnRight')
       : t('qibla_turnLeft');
 
+  const whereabouts = t('qibla_where', {
+    dir: t(WIND_KEYS[windIndex(bearing)]),
+    km:
+      distance !== undefined
+        ? Math.round(distance).toLocaleString(language === 'ar' ? 'ar' : 'en-US')
+        : '—',
+  });
+
   return (
     <Screen scroll={false} bottomInset={spacing.lg} contentStyle={styles.screen}>
       <Text variant="heading" weight="700" align="center">
@@ -86,35 +114,45 @@ export default function QiblaScreen() {
         />
       </View>
 
-      <View
-        style={styles.readout}
-        accessible
-        accessibilityRole="text"
-        accessibilityLabel={`${guidance}. ${t('qibla_fromNorth', { degrees: Math.round(bearing) })}`}
-        // The heading changes continuously; announcing every frame would make
-        // the screen unusable with a screen reader.
-        accessibilityLiveRegion="none"
-      >
-        <Text
-          variant="heading"
-          weight="700"
-          align="center"
-          color={aligned ? colors.success : colors.text}
+      <View style={styles.footer}>
+        <View
+          accessible
+          accessibilityRole="text"
+          accessibilityLabel={guidance}
+          // The heading changes continuously; announcing every frame would
+          // make the screen unusable with a screen reader.
+          accessibilityLiveRegion="none"
+          style={[
+            styles.guidance,
+            {
+              flexDirection: isRTL ? 'row-reverse' : 'row',
+              backgroundColor: aligned ? colors.successSoft : colors.accentSoft,
+            },
+          ]}
         >
-          {guidance}
-        </Text>
+          <MaterialCommunityIcons
+            name={aligned ? 'check-circle' : turn > 0 ? 'rotate-right' : 'rotate-left'}
+            size={44}
+            color={aligned ? colors.success : colors.text}
+          />
+          <Text
+            weight="700"
+            align="center"
+            color={aligned ? colors.success : colors.text}
+            style={{ fontSize: aligned ? 24 : 30 }}
+          >
+            {guidance}
+          </Text>
+        </View>
 
-        <Text variant="body" color={colors.textMuted} align="center" tabular>
-          {t('qibla_fromNorth', { degrees: Math.round(bearing) })}
-          {distance !== undefined
-            ? ` · ${t('qibla_distance', { distance: Math.round(distance).toLocaleString('en-US') })}`
-            : ''}
-        </Text>
-
-        <Text variant="caption" color={colors.textMuted} align="center" style={styles.hint}>
+        <Text variant="body" color={colors.textMuted} align="center" style={styles.hint}>
           {compass.accuracy > 0 && compass.accuracy < 2
             ? t('qibla_calibrate')
             : t('qibla_instruction')}
+        </Text>
+
+        <Text variant="caption" color={colors.textMuted} align="center" tabular>
+          {whereabouts}
         </Text>
       </View>
     </Screen>
@@ -161,12 +199,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 1,
   },
-  readout: {
-    gap: spacing.xs,
+  footer: {
+    gap: spacing.sm + 4,
+  },
+  guidance: {
+    minHeight: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: radius.lg,
   },
   hint: {
-    lineHeight: 20,
-    marginTop: spacing.xs,
+    lineHeight: 26,
   },
   message: {
     flex: 1,

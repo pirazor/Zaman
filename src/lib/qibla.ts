@@ -61,6 +61,14 @@ export function normalizeDegrees(degrees: number): number {
 }
 
 /**
+ * Index of the eight-wind compass name for a bearing: 0 = north, 1 =
+ * northeast, … 7 = northwest, each sector spanning ±22.5° around its axis.
+ */
+export function windIndex(bearing: number): number {
+  return Math.round(normalizeDegrees(bearing) / 45) % 8;
+}
+
+/**
  * Unwraps a target angle so that animating from `current` to it takes the
  * short way round: rotating from 350° to 10° should sweep +20°, not -340°.
  * Returns a value that may fall outside [0, 360).

@@ -8,6 +8,7 @@ import {
   shortestRotation,
   smoothHeading,
   turnAngle,
+  windIndex,
 } from '../src/lib/qibla';
 
 describe('qiblaBearing', () => {
@@ -91,6 +92,38 @@ describe('isAligned', () => {
   it('honours the boundary exactly', () => {
     expect(isAligned(0, ALIGNMENT_TOLERANCE_DEGREES)).toBe(true);
     expect(isAligned(0, ALIGNMENT_TOLERANCE_DEGREES + 0.1)).toBe(false);
+  });
+});
+
+describe('windIndex', () => {
+  it('names the eight winds clockwise from north', () => {
+    expect(windIndex(0)).toBe(0);
+    expect(windIndex(45)).toBe(1);
+    expect(windIndex(90)).toBe(2);
+    expect(windIndex(135)).toBe(3);
+    expect(windIndex(180)).toBe(4);
+    expect(windIndex(225)).toBe(5);
+    expect(windIndex(270)).toBe(6);
+    expect(windIndex(315)).toBe(7);
+  });
+
+  it('splits sectors at the 22.5° midlines', () => {
+    expect(windIndex(22.4)).toBe(0);
+    expect(windIndex(22.6)).toBe(1);
+    expect(windIndex(337.6)).toBe(0);
+    expect(windIndex(337.4)).toBe(7);
+  });
+
+  it('handles wrapped and negative bearings', () => {
+    expect(windIndex(360)).toBe(0);
+    expect(windIndex(-45)).toBe(7);
+    expect(windIndex(405)).toBe(1);
+  });
+
+  it('matches the published wind for known cities', () => {
+    // Istanbul 151.6° -> southeast; New York 58.5° -> northeast.
+    expect(windIndex(qiblaBearing({ latitude: 41.0082, longitude: 28.9784 }))).toBe(3);
+    expect(windIndex(qiblaBearing({ latitude: 40.7128, longitude: -74.006 }))).toBe(1);
   });
 });
 

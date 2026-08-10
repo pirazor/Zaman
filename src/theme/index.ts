@@ -36,6 +36,8 @@ export interface Palette {
   accentSoft: string;
   /** Success / "you are facing the Qibla". */
   success: string;
+  /** Tint behind the guidance pill once the user faces the Qibla. */
+  successSoft: string;
   /** Warnings such as a compass that needs calibrating. */
   warning: string;
   /** Errors such as a denied permission. */
@@ -56,6 +58,7 @@ const light: Palette = {
   accent: '#9A7B16',
   accentSoft: '#F6EDD5',
   success: '#146C43',
+  successSoft: '#E4EFE8',
   warning: '#8A5A00',
   danger: '#A32218',
 };
@@ -74,6 +77,7 @@ const dark: Palette = {
   accent: '#E8C879',
   accentSoft: '#2A2415',
   success: '#4ADE80',
+  successSoft: '#14301F',
   warning: '#F0B356',
   danger: '#F0776C',
 };
