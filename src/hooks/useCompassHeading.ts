@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AppState } from 'react-native';
+import { useIsFocused } from 'expo-router';
 import * as Location from 'expo-location';
 import { Magnetometer } from 'expo-sensors';
 
@@ -20,7 +20,7 @@ export interface CompassReading {
 }
 
 /**
- * Streams the device's compass heading.
+ * Streams the device's compass heading while the Qibla screen is on show.
  *
  * `expo-location`'s heading stream is used rather than the raw magnetometer
  * because it reports *true* north: it applies the local magnetic declination,
@@ -28,12 +28,17 @@ export interface CompassReading {
  * put the Qibla noticeably off. Readings are low-pass filtered, since raw
  * values jitter by several degrees and an unfiltered needle is unreadable.
  *
- * The subscription is dropped while the app is backgrounded and reopened on
- * return. Reopening is the fragile moment — the sensor is often not ready for
- * a few hundred milliseconds — so failures there are retried rather than
- * reported, and `available` describes the hardware, never the stream.
+ * The subscription's lifetime is tied to *navigation focus*, deliberately not
+ * to app state. Tearing the stream down when the app was backgrounded and
+ * rebuilding it on return proved unreliable — the rebuilt stream frequently
+ * never delivered another reading, leaving the dial frozen. iOS already stops
+ * delivering headings to a suspended app and resumes on its own, so the
+ * subscription is simply left in place across that transition. Leaving the
+ * screen still releases it, which is what actually matters for the sensor.
  */
 export function useCompassHeading(): CompassReading {
+  const isFocused = useIsFocused();
+
   const [heading, setHeading] = useState<number | undefined>(undefined);
   const [accuracy, setAccuracy] = useState(0);
   const [available, setAvailable] = useState(false);
@@ -42,42 +47,30 @@ export function useCompassHeading(): CompassReading {
   // Smoothing needs the previous value without re-subscribing on every reading.
   const smoothed = useRef<number | undefined>(undefined);
 
+  /**
+   * Whether this device has a magnetometer at all, asked once and kept across
+   * focus changes. Hardware does not come and go, whereas the check itself can
+   * fail transiently — and answering "this phone has no compass" to a
+   * momentary failure is both wrong and unrecoverable.
+   */
+  const hasHardware = useRef<boolean | undefined>(undefined);
+
   useEffect(() => {
+    if (!isFocused) return;
+
     let disposed = false;
     let subscription: Location.LocationSubscription | undefined;
-    /** Guards against two overlapping starts while the first is awaiting. */
-    let starting = false;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-    /**
-     * Whether this device has a magnetometer at all, asked once and kept.
-     *
-     * Hardware does not come and go, but the check itself can fail while the
-     * app is resuming — and answering "this phone has no compass" to a
-     * momentary failure is both wrong and unrecoverable, since by then
-     * nothing would ever ask again.
-     */
-    let hasHardware: boolean | undefined;
-
-    const clearRetry = () => {
-      if (retryTimer === undefined) return;
-      clearTimeout(retryTimer);
-      retryTimer = undefined;
-    };
-
-    const start = async () => {
-      if (disposed || subscription || starting) return;
-      starting = true;
-      clearRetry();
-
+    const open = async () => {
       try {
-        if (hasHardware === undefined) {
-          hasHardware = await Magnetometer.isAvailableAsync();
+        if (hasHardware.current === undefined) {
+          hasHardware.current = await Magnetometer.isAvailableAsync();
           if (disposed) return;
-          setAvailable(hasHardware);
+          setAvailable(hasHardware.current);
           setChecking(false);
         }
-        if (!hasHardware) return;
+        if (!hasHardware.current) return;
 
         const next = await Location.watchHeadingAsync((reading) => {
           // `trueHeading` is -1 until location permission is granted; the
@@ -93,43 +86,30 @@ export function useCompassHeading(): CompassReading {
           setAccuracy(reading.accuracy);
         });
 
-        // The screen may have been left while the subscription was opening.
-        if (disposed || AppState.currentState !== 'active') {
+        // The screen may have been left while the stream was opening.
+        if (disposed) {
           next.remove();
           return;
         }
         subscription = next;
       } catch {
-        // Sensors are routinely unready for a moment after the app returns to
-        // the foreground. Retry instead of reporting missing hardware.
-        if (!disposed) retryTimer = setTimeout(() => void start(), RETRY_DELAY_MS);
-      } finally {
-        starting = false;
+        // Sensors can be unready for a moment. Retry rather than concluding
+        // anything about the hardware.
+        if (!disposed) retryTimer = setTimeout(() => void open(), RETRY_DELAY_MS);
       }
     };
 
-    const stop = () => {
-      clearRetry();
+    void open();
+
+    return () => {
+      disposed = true;
+      if (retryTimer !== undefined) clearTimeout(retryTimer);
       subscription?.remove();
-      subscription = undefined;
       // Drop the filter so the needle starts from the live heading rather
       // than sweeping across from wherever the phone was pointing before.
       smoothed.current = undefined;
     };
-
-    if (AppState.currentState === 'active') void start();
-
-    const appStateSubscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active') void start();
-      else stop();
-    });
-
-    return () => {
-      disposed = true;
-      stop();
-      appStateSubscription.remove();
-    };
-  }, []);
+  }, [isFocused]);
 
   return { heading, accuracy, available, checking };
 }
