@@ -8,6 +8,16 @@ import { smoothHeading } from '../lib/qibla';
 /** How long to wait before retrying a heading stream that failed to open. */
 const RETRY_DELAY_MS = 400;
 
+/**
+ * A healthy heading stream reports several times a second — sensor jitter
+ * alone guarantees updates even on a phone lying still. Silence this long
+ * means the stream is dead, not that the phone is steady.
+ */
+const STALL_TIMEOUT_MS = 4000;
+
+/** How often the watchdog looks at the stream's last-delivery time. */
+const WATCHDOG_INTERVAL_MS = 2000;
+
 export interface CompassReading {
   /** Degrees clockwise from north, or `undefined` before the first reading. */
   heading: number | undefined;
@@ -61,6 +71,36 @@ export function useCompassHeading(): CompassReading {
     let disposed = false;
     let subscription: Location.LocationSubscription | undefined;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let watchdog: ReturnType<typeof setInterval> | undefined;
+    let lastDelivery = 0;
+
+    /**
+     * Touches the native location module before the heading watch opens.
+     *
+     * On a fresh install the onboarding flow has already requested permission
+     * and taken a GPS fix, and the compass works. On a relaunch with a cached
+     * location all of that is skipped, making the heading watch the first
+     * call into the module in the process — and a watch opened against the
+     * cold module can come up silent. Asking for the permission state and the
+     * last known position (both cheap, neither prompts nor spins up GPS)
+     * walks the same initialization path the working case walks.
+     */
+    const warmUp = async () => {
+      try {
+        const permission = await Location.getForegroundPermissionsAsync();
+        if (permission.granted) {
+          await Location.getLastKnownPositionAsync({});
+        }
+      } catch {
+        // Warming is best-effort; the watchdog below covers a cold start
+        // that still comes up silent.
+      }
+    };
+
+    const close = () => {
+      subscription?.remove();
+      subscription = undefined;
+    };
 
     const open = async () => {
       try {
@@ -72,7 +112,12 @@ export function useCompassHeading(): CompassReading {
         }
         if (!hasHardware.current) return;
 
+        await warmUp();
+        if (disposed) return;
+
         const next = await Location.watchHeadingAsync((reading) => {
+          lastDelivery = Date.now();
+
           // `trueHeading` is -1 until location permission is granted; the
           // magnetic heading is still useful, just uncorrected.
           const raw = reading.trueHeading >= 0 ? reading.trueHeading : reading.magHeading;
@@ -92,6 +137,7 @@ export function useCompassHeading(): CompassReading {
           return;
         }
         subscription = next;
+        lastDelivery = Date.now();
       } catch {
         // Sensors can be unready for a moment. Retry rather than concluding
         // anything about the hardware.
@@ -101,10 +147,21 @@ export function useCompassHeading(): CompassReading {
 
     void open();
 
+    // A stream can open successfully and still never deliver. Nothing in the
+    // API reports that, so the only defence is to notice the silence and
+    // rebuild the subscription.
+    watchdog = setInterval(() => {
+      if (disposed || !subscription) return;
+      if (Date.now() - lastDelivery < STALL_TIMEOUT_MS) return;
+      close();
+      void open();
+    }, WATCHDOG_INTERVAL_MS);
+
     return () => {
       disposed = true;
       if (retryTimer !== undefined) clearTimeout(retryTimer);
-      subscription?.remove();
+      if (watchdog !== undefined) clearInterval(watchdog);
+      close();
       // Drop the filter so the needle starts from the live heading rather
       // than sweeping across from wherever the phone was pointing before.
       smoothed.current = undefined;
