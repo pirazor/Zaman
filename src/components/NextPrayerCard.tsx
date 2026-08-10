@@ -108,9 +108,10 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: radius.lg,
     paddingHorizontal: spacing.lg,
-    // Trimmed off the scale: this card is the biggest single block on the
-    // home screen, and the day has to fit a phone without scrolling.
-    paddingVertical: 14,
+    // Off the scale on purpose: this card is the biggest single block on the
+    // home screen, so its vertical padding is the dial that trades breathing
+    // room against fitting the whole day on a phone without scrolling.
+    paddingVertical: 18,
     gap: 2,
   },
   eyebrow: {
