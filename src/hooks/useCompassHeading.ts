@@ -5,6 +5,9 @@ import { Magnetometer } from 'expo-sensors';
 
 import { smoothHeading } from '../lib/qibla';
 
+/** How long to wait before retrying a heading stream that failed to open. */
+const RETRY_DELAY_MS = 400;
+
 export interface CompassReading {
   /** Degrees clockwise from north, or `undefined` before the first reading. */
   heading: number | undefined;
@@ -25,7 +28,10 @@ export interface CompassReading {
  * put the Qibla noticeably off. Readings are low-pass filtered, since raw
  * values jitter by several degrees and an unfiltered needle is unreadable.
  *
- * The subscription is dropped while the app is backgrounded.
+ * The subscription is dropped while the app is backgrounded and reopened on
+ * return. Reopening is the fragile moment — the sensor is often not ready for
+ * a few hundred milliseconds — so failures there are retried rather than
+ * reported, and `available` describes the hardware, never the stream.
  */
 export function useCompassHeading(): CompassReading {
   const [heading, setHeading] = useState<number | undefined>(undefined);
@@ -37,60 +43,90 @@ export function useCompassHeading(): CompassReading {
   const smoothed = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    let cancelled = false;
+    let disposed = false;
     let subscription: Location.LocationSubscription | undefined;
+    /** Guards against two overlapping starts while the first is awaiting. */
+    let starting = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const subscribe = async () => {
-      if (subscription) return;
+    /**
+     * Whether this device has a magnetometer at all, asked once and kept.
+     *
+     * Hardware does not come and go, but the check itself can fail while the
+     * app is resuming — and answering "this phone has no compass" to a
+     * momentary failure is both wrong and unrecoverable, since by then
+     * nothing would ever ask again.
+     */
+    let hasHardware: boolean | undefined;
+
+    const clearRetry = () => {
+      if (retryTimer === undefined) return;
+      clearTimeout(retryTimer);
+      retryTimer = undefined;
+    };
+
+    const start = async () => {
+      if (disposed || subscription || starting) return;
+      starting = true;
+      clearRetry();
+
       try {
-        const hasMagnetometer = await Magnetometer.isAvailableAsync();
-        if (cancelled) return;
+        if (hasHardware === undefined) {
+          hasHardware = await Magnetometer.isAvailableAsync();
+          if (disposed) return;
+          setAvailable(hasHardware);
+          setChecking(false);
+        }
+        if (!hasHardware) return;
 
-        setAvailable(hasMagnetometer);
-        setChecking(false);
-        if (!hasMagnetometer) return;
-
-        subscription = await Location.watchHeadingAsync((reading) => {
+        const next = await Location.watchHeadingAsync((reading) => {
           // `trueHeading` is -1 until location permission is granted; the
           // magnetic heading is still useful, just uncorrected.
           const raw = reading.trueHeading >= 0 ? reading.trueHeading : reading.magHeading;
           if (!Number.isFinite(raw) || raw < 0) return;
 
-          const next =
+          const smoothedNext =
             smoothed.current === undefined ? raw : smoothHeading(smoothed.current, raw);
-          smoothed.current = next;
+          smoothed.current = smoothedNext;
 
-          setHeading(next);
+          setHeading(smoothedNext);
           setAccuracy(reading.accuracy);
         });
 
-        if (cancelled) {
-          subscription.remove();
-          subscription = undefined;
+        // The screen may have been left while the subscription was opening.
+        if (disposed || AppState.currentState !== 'active') {
+          next.remove();
+          return;
         }
+        subscription = next;
       } catch {
-        if (cancelled) return;
-        setAvailable(false);
-        setChecking(false);
+        // Sensors are routinely unready for a moment after the app returns to
+        // the foreground. Retry instead of reporting missing hardware.
+        if (!disposed) retryTimer = setTimeout(() => void start(), RETRY_DELAY_MS);
+      } finally {
+        starting = false;
       }
     };
 
-    const unsubscribe = () => {
+    const stop = () => {
+      clearRetry();
       subscription?.remove();
       subscription = undefined;
+      // Drop the filter so the needle starts from the live heading rather
+      // than sweeping across from wherever the phone was pointing before.
       smoothed.current = undefined;
     };
 
-    if (AppState.currentState === 'active') void subscribe();
+    if (AppState.currentState === 'active') void start();
 
     const appStateSubscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active') void subscribe();
-      else unsubscribe();
+      if (nextState === 'active') void start();
+      else stop();
     });
 
     return () => {
-      cancelled = true;
-      unsubscribe();
+      disposed = true;
+      stop();
       appStateSubscription.remove();
     };
   }, []);
