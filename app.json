@@ -6,9 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "zaman",
-    "//runtimeVersion": "The sdkVersion policy is what lets Expo Go open an EAS update: Expo Go matches updates on SDK version, having no native build of its own to fingerprint. Switch to `appVersion` or `fingerprint` once testing moves to real builds.",
+    "//runtimeVersion": "Ties an update to the builds that can safely run it. appVersion means an update reaches every build sharing this app version, and stops at the next one, which is what you want whenever native code may have changed. The sdkVersion policy is Expo Go only.",
     "runtimeVersion": {
-      "policy": "sdkVersion"
+      "policy": "appVersion"
     },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
