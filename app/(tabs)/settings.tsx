@@ -123,19 +123,16 @@ export default function SettingsScreen() {
         ) : null}
 
         {notificationsEnabled && permission !== 'blocked' ? (
-          <>
-            <SectionTitle>{t('settings_reminderTime')}</SectionTitle>
-            <Card>
-              {REMINDER_MINUTE_OPTIONS.map((minutes) => (
-                <OptionRow
-                  key={minutes}
-                  label={t('settings_minutesBefore', { minutes })}
-                  selected={reminderMinutes === minutes}
-                  onPress={() => setReminderMinutes(minutes)}
-                />
-              ))}
-            </Card>
-          </>
+          <Card style={styles.minutesCard}>
+            {REMINDER_MINUTE_OPTIONS.map((minutes) => (
+              <OptionRow
+                key={minutes}
+                label={t('settings_minutesBefore', { minutes })}
+                selected={reminderMinutes === minutes}
+                onPress={() => setReminderMinutes(minutes)}
+              />
+            ))}
+          </Card>
         ) : null}
       </View>
 
@@ -176,6 +173,7 @@ export default function SettingsScreen() {
         <Card>
           <OptionRow
             label={t('settings_calculationAuto', { method: t(`method_${automaticMethod}`) })}
+            description={t('settings_calculationAutoDesc')}
             selected={methodIsAutomatic}
             onPress={() => setMethod(undefined)}
           />
@@ -228,6 +226,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.sm,
     paddingHorizontal: spacing.sm,
+  },
+  minutesCard: {
+    marginTop: spacing.sm,
   },
   locationCard: {
     padding: spacing.md,
