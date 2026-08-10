@@ -4,7 +4,7 @@ import { Tabs } from 'expo-router';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { useApp } from '../../src/state/AppProvider';
-import { fontSize } from '../../src/theme';
+import { fontSize, spacing } from '../../src/theme';
 
 /**
  * Three tabs, always labelled, always visible. The app has no nested
@@ -24,16 +24,21 @@ export default function TabsLayout() {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: Platform.select({ ios: 92, default: 76 }),
-          paddingTop: 8,
+          // Tall enough to carry the icon, the gap below it and the label
+          // without the label crowding the bottom edge.
+          height: Platform.select({ ios: 98, default: 82 }),
+          paddingTop: spacing.sm,
         },
         tabBarLabelStyle: {
           fontSize: fontSize.caption,
           fontWeight: '600',
-          paddingBottom: Platform.select({ ios: 0, default: 8 }),
+          // At this size a label sitting tight under its glyph reads as one
+          // smudged shape; a few points of air separates them.
+          marginTop: spacing.xs + 2,
+          paddingBottom: Platform.select({ ios: 0, default: spacing.sm }),
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
+          paddingVertical: spacing.xs,
         },
       }}
     >
