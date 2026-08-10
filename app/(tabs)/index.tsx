@@ -69,7 +69,7 @@ function Timetable({
 
   return (
     <Screen
-      bottomInset={spacing.lg}
+      bottomSafeArea={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
@@ -158,7 +158,10 @@ function LocationPrompt() {
 
 const styles = StyleSheet.create({
   screen: {
-    gap: spacing.lg,
+    // The whole day is meant to be readable without scrolling on a standard
+    // phone, so the vertical rhythm here is deliberately tighter than the
+    // rest of the app.
+    gap: spacing.md,
   },
   place: {
     alignItems: 'center',

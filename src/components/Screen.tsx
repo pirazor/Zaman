@@ -17,6 +17,12 @@ export interface ScreenProps {
   scroll?: boolean;
   /** Extra bottom padding, e.g. to clear the tab bar. */
   bottomInset?: number;
+  /**
+   * Whether to reserve the home-indicator inset at the bottom. Screens inside
+   * the tab navigator should pass `false`: the tab bar already occupies that
+   * strip, and reserving it twice wastes about 34pt of a phone screen.
+   */
+  bottomSafeArea?: boolean;
   contentStyle?: ViewStyle;
   refreshControl?: React.ReactElement<RefreshControlProps>;
 }
@@ -25,6 +31,7 @@ export function Screen({
   children,
   scroll = true,
   bottomInset = 0,
+  bottomSafeArea = true,
   contentStyle,
   refreshControl,
 }: ScreenProps) {
@@ -32,8 +39,8 @@ export function Screen({
   const insets = useSafeAreaInsets();
 
   const padding: ViewStyle = {
-    paddingTop: insets.top + spacing.md,
-    paddingBottom: insets.bottom + bottomInset + spacing.xl,
+    paddingTop: insets.top + spacing.sm,
+    paddingBottom: (bottomSafeArea ? insets.bottom : 0) + bottomInset + spacing.md,
     paddingHorizontal: spacing.md,
   };
 

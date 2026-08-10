@@ -85,7 +85,7 @@ export default function SettingsScreen() {
   const version = Constants.expoConfig?.version ?? '1.0.0';
 
   return (
-    <Screen bottomInset={spacing.lg} contentStyle={styles.screen}>
+    <Screen bottomSafeArea={false} contentStyle={styles.screen}>
       <Text variant="title" weight="700" accessibilityRole="header">
         {t('settings_title')}
       </Text>

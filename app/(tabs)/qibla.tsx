@@ -100,7 +100,7 @@ export default function QiblaScreen() {
   });
 
   return (
-    <Screen scroll={false} bottomInset={spacing.lg} contentStyle={styles.screen}>
+    <Screen scroll={false} bottomSafeArea={false} contentStyle={styles.screen}>
       <Text variant="heading" weight="700" align="center">
         {t('qibla_title')}
       </Text>

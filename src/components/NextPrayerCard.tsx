@@ -107,8 +107,11 @@ export function NextPrayerCard({ next, msRemaining }: NextPrayerCardProps) {
 const styles = StyleSheet.create({
   card: {
     borderRadius: radius.lg,
-    padding: spacing.lg,
-    gap: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    // Trimmed off the scale: this card is the biggest single block on the
+    // home screen, and the day has to fit a phone without scrolling.
+    paddingVertical: 14,
+    gap: 2,
   },
   eyebrow: {
     letterSpacing: 1.2,
@@ -118,7 +121,6 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     justifyContent: 'space-between',
     gap: spacing.md,
-    marginTop: spacing.xs,
   },
   name: {
     flexShrink: 1,
@@ -126,7 +128,7 @@ const styles = StyleSheet.create({
   divider: {
     height: StyleSheet.hairlineWidth * 3,
     opacity: 0.35,
-    marginVertical: spacing.md,
+    marginVertical: spacing.sm,
     borderRadius: radius.pill,
   },
   countdown: {

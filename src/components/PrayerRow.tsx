@@ -5,7 +5,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useApp } from '../state/AppProvider';
 import type { PrayerSlot } from '../lib/prayer';
 import { formatTime } from '../lib/time';
-import { MIN_TOUCH_TARGET, radius, spacing } from '../theme';
+import { radius, spacing } from '../theme';
 import { Text } from './Text';
 
 /** A glyph per time of day, so the list can be scanned without reading it. */
@@ -80,11 +80,14 @@ export function PrayerRow({ slot, time, isCurrent, isNext }: PrayerRowProps) {
 
 const styles = StyleSheet.create({
   row: {
-    minHeight: MIN_TOUCH_TARGET,
+    // These rows are read, not tapped, so they are not held to the 56pt touch
+    // minimum. The 24pt time stays; only the padding around it gives way, to
+    // keep the whole day visible without scrolling.
+    minHeight: 48,
     alignItems: 'center',
     gap: spacing.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   label: {
     flex: 1,
