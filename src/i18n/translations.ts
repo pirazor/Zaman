@@ -149,7 +149,7 @@ export type Translations = Record<TranslationKey, string>;
 const tr: Translations = {
   appName: 'Zaman',
 
-  tabs_times: 'Namaz Vakitleri',
+  tabs_times: 'Vakitler',
   tabs_qibla: 'Kıble',
   tabs_settings: 'Ayarlar',
 
