@@ -78,10 +78,15 @@ interface AppContextValue {
    * `undefined` for the device clock when location is automatic.
    */
   timeZone: string | undefined;
+  /** The optional second city on the home screen; `undefined` when off. */
+  secondCity: City | undefined;
+  secondCityEnabled: boolean;
 
   setLanguage: (language: Language) => void;
   /** Chooses a city by id, or `undefined` to return to automatic location. */
   setManualCity: (cityId: string | undefined) => void;
+  setSecondCityEnabled: (enabled: boolean) => void;
+  setSecondCity: (cityId: string) => void;
   setMethod: (method: CalculationMethodKey | undefined) => void;
   setMadhab: (madhab: MadhabKey) => void;
   setTimeFormat: (format: TimeFormat) => void;
@@ -135,6 +140,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const colors = palettes[scheme];
 
   const manualCity = cityById(state.manualCityId);
+
+  // Makkah until a city is chosen: switching the feature on must show
+  // something immediately, and no city is a neutral default the way the
+  // Qibla's own anchor is.
+  const secondCity = state.secondCityEnabled
+    ? (cityById(state.secondCityId) ?? cityById('makkah'))
+    : undefined;
 
   // A hand-picked city overrides the GPS fix everywhere: times, Qibla and the
   // place shown on the home screen all follow it, exactly like a fix would.
@@ -239,8 +251,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       locationStatus,
       manualCity,
       timeZone: manualCity?.timezone,
+      secondCity,
+      secondCityEnabled: state.secondCityEnabled,
       setLanguage: (next) => update({ language: next }),
       setManualCity: (cityId) => update({ manualCityId: cityId }),
+      setSecondCityEnabled: (enabled) => update({ secondCityEnabled: enabled }),
+      setSecondCity: (cityId) => update({ secondCityId: cityId }),
       setMethod: (next) => update({ method: next }),
       setMadhab: (next) => update({ madhab: next }),
       setTimeFormat: (next) => update({ timeFormat: next }),

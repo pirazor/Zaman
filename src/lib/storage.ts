@@ -36,6 +36,10 @@ export interface PersistedState {
    * location is automatic (GPS). A manual city overrides `place` everywhere.
    */
   manualCityId?: string;
+  /** Whether the home screen shows a second city's next prayer. */
+  secondCityEnabled: boolean;
+  /** The second city's id; Makkah until the user picks one. */
+  secondCityId?: string;
 }
 
 export const DEFAULT_STATE: PersistedState = {
@@ -43,6 +47,7 @@ export const DEFAULT_STATE: PersistedState = {
   madhab: 'shafi',
   notificationsEnabled: true,
   reminderMinutes: 15,
+  secondCityEnabled: false,
 };
 
 export async function loadState(): Promise<PersistedState> {

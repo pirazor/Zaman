@@ -102,6 +102,13 @@ const en = {
   settings_cityAuto: 'Automatic (your location)',
   settings_searchCity: 'Search for a city…',
   settings_refreshLocation: 'Update my location',
+  settings_secondCity: 'Show a second city',
+
+  // Compact duration units for the second-city chip, where the full words
+  // would not fit: "6 h 3 m".
+  duration_hour_short: 'h',
+  duration_minute_short: 'm',
+  duration_second_short: 's',
   settings_about: 'About Zaman',
   settings_aboutBody:
     'Zaman is free, with no accounts and no ads. Everything is calculated on your phone and works offline. Your location never leaves your device.',
@@ -229,6 +236,11 @@ const tr: Translations = {
   settings_cityAuto: 'Otomatik (konumunuz)',
   settings_searchCity: 'Şehir arayın…',
   settings_refreshLocation: 'Konumumu güncelle',
+  settings_secondCity: 'İkinci şehir göster',
+
+  duration_hour_short: 'sa',
+  duration_minute_short: 'dk',
+  duration_second_short: 'sn',
   settings_about: 'Zaman hakkında',
   settings_aboutBody:
     'Zaman ücretsizdir. Hesap yok, reklam yok. Her şey telefonunuzda hesaplanır ve internetsiz çalışır. Konumunuz cihazınızdan asla çıkmaz.',
@@ -354,6 +366,11 @@ const ar: Translations = {
   settings_cityAuto: 'تلقائي (موقعك)',
   settings_searchCity: 'ابحث عن مدينة…',
   settings_refreshLocation: 'تحديث موقعي',
+  settings_secondCity: 'إظهار مدينة ثانية',
+
+  duration_hour_short: 'س',
+  duration_minute_short: 'د',
+  duration_second_short: 'ث',
   settings_about: 'عن زمان',
   settings_aboutBody:
     'زمان مجاني، بلا حسابات وبلا إعلانات. يُحسب كل شيء على هاتفك ويعمل دون إنترنت. موقعك لا يغادر جهازك أبداً.',

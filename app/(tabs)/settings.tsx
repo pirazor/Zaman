@@ -48,12 +48,17 @@ export default function SettingsScreen() {
     refreshLocation,
     manualCity,
     setManualCity,
+    secondCity,
+    secondCityEnabled,
+    setSecondCityEnabled,
+    setSecondCity,
     isRTL,
   } = useApp();
 
   const [permission, setPermission] = useState<NotificationPermission>('granted');
   const [locating, setLocating] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
+  const [secondQuery, setSecondQuery] = useState('');
 
   useEffect(() => {
     void getNotificationPermission().then(setPermission);
@@ -255,6 +260,56 @@ export default function SettingsScreen() {
               loading={locating}
               style={styles.refreshButton}
             />
+          ) : null}
+        </Card>
+
+        {/* The second city lives with Location: same idea, same search. */}
+        <Card style={styles.minutesCard}>
+          <OptionRow
+            label={t('settings_secondCity')}
+            toggle={{ value: secondCityEnabled, onChange: setSecondCityEnabled }}
+          />
+          {secondCityEnabled && secondCity ? (
+            <>
+              <OptionRow label={secondCity.names[language]} selected />
+              <View
+                style={[
+                  styles.search,
+                  {
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
+                    borderColor: colors.border,
+                    backgroundColor: colors.surfaceMuted,
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons name="magnify" size={26} color={colors.textMuted} />
+                <TextInput
+                  value={secondQuery}
+                  onChangeText={setSecondQuery}
+                  placeholder={t('settings_searchCity')}
+                  placeholderTextColor={colors.textMuted}
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  accessibilityLabel={t('settings_searchCity')}
+                  style={[
+                    styles.searchInput,
+                    { color: colors.text, textAlign: isRTL ? 'right' : 'left' },
+                  ]}
+                />
+              </View>
+              {searchCities(secondQuery)
+                .filter((city) => city.id !== secondCity.id)
+                .map((city) => (
+                  <OptionRow
+                    key={city.id}
+                    label={city.names[language]}
+                    onPress={() => {
+                      setSecondCity(city.id);
+                      setSecondQuery('');
+                    }}
+                  />
+                ))}
+            </>
           ) : null}
         </Card>
       </View>

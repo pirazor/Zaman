@@ -68,3 +68,19 @@ export function describeRemaining(
     .map((segment) => `${segment.value} ${unitLabel(language, segment.unit, segment.value)}`)
     .join(translate(language, 'duration_separator'));
 }
+
+/**
+ * The remaining time in compact form — "6 h 3 m" — for the second-city chip,
+ * where the full unit words would not fit. Uses the same segments as the big
+ * countdown, so the two never disagree.
+ */
+export function describeRemainingShort(
+  language: Language,
+  segments: readonly DurationSegment[],
+): string {
+  if (segments.length === 0) return translate(language, 'home_now');
+
+  return segments
+    .map((segment) => `${segment.value} ${translate(language, `duration_${segment.unit}_short`)}`)
+    .join(' ');
+}

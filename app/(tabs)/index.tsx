@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Linking, RefreshControl, StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { Button } from '../../src/components/Button';
@@ -7,6 +8,7 @@ import { Card } from '../../src/components/Card';
 import { NextPrayerCard } from '../../src/components/NextPrayerCard';
 import { PrayerRow } from '../../src/components/PrayerRow';
 import { Screen } from '../../src/components/Screen';
+import { SecondCityRow } from '../../src/components/SecondCityChip';
 import { Text } from '../../src/components/Text';
 import { useNow } from '../../src/hooks/useNow';
 import {
@@ -39,7 +41,8 @@ function Timetable({
   position: Position;
   prayerSettings: PrayerSettings;
 }) {
-  const { place, t, colors, language, isRTL, refreshLocation, timeZone } = useApp();
+  const { t, colors, language, refreshLocation, timeZone } = useApp();
+  const router = useRouter();
   const now = useNow();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -77,12 +80,11 @@ function Timetable({
       }
       contentStyle={styles.screen}
     >
-      <View style={[styles.place, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-        <MaterialCommunityIcons name="map-marker-outline" size={22} color={colors.textMuted} />
-        <Text variant="label" weight="600" color={colors.textMuted} style={styles.placeLabel}>
-          {place?.label ?? t('home_unknownPlace')}
-        </Text>
-      </View>
+      <SecondCityRow
+        now={now}
+        onPressPrimary={() => router.push('/(tabs)/settings')}
+        onPressSecond={() => router.push('/second-city')}
+      />
 
       <View style={styles.dates}>
         <Text variant="heading" weight="700">
@@ -164,13 +166,6 @@ const styles = StyleSheet.create({
     // phone, so the vertical rhythm here is deliberately tighter than the
     // rest of the app.
     gap: spacing.md,
-  },
-  place: {
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  placeLabel: {
-    flexShrink: 1,
   },
   dates: {
     gap: 2,
