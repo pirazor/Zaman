@@ -24,6 +24,11 @@ export interface Palette {
   textMuted: string;
   /** Brand green. */
   primary: string;
+  /**
+   * Selection green: the active tab, ticks and switch tracks. A step brighter
+   * than `primary`, which reads too heavy at small marks on light ground.
+   */
+  primaryBright: string;
   /** Darker brand green, used as the far end of the hero gradient. */
   primaryDeep: string;
   /** Text drawn on top of `primary`. */
@@ -52,6 +57,7 @@ const light: Palette = {
   text: '#15201B',
   textMuted: '#5A6560',
   primary: '#0F5132',
+  primaryBright: '#178552',
   primaryDeep: '#0A3A24',
   onPrimary: '#FFFFFF',
   onPrimaryMuted: '#C8DFD3',
@@ -71,6 +77,7 @@ const dark: Palette = {
   text: '#F2F1EC',
   textMuted: '#A3B0A9',
   primary: '#1B7A4B',
+  primaryBright: '#2E9C64',
   primaryDeep: '#0E3F28',
   onPrimary: '#FFFFFF',
   onPrimaryMuted: '#BFD9CC',

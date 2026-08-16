@@ -28,14 +28,14 @@ export interface PrayerRowProps {
 }
 
 export function PrayerRow({ slot, time, isCurrent, isNext }: PrayerRowProps) {
-  const { colors, t, timeFormat, isRTL, language } = useApp();
+  const { colors, t, timeFormat, isRTL, language, timeZone } = useApp();
 
   // Sunrise is not a prayer: it is shown for reference, so it recedes.
   const isSunrise = slot === 'sunrise';
   const highlighted = isCurrent || isNext;
 
   const label = t(`prayer_${slot}`);
-  const formatted = formatTime(time, timeFormat, language);
+  const formatted = formatTime(time, timeFormat, language, timeZone);
 
   return (
     <View

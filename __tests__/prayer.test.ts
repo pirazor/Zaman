@@ -41,6 +41,31 @@ describe('getDayTimetable', () => {
     });
   });
 
+  it('stays within a minute of the published Diyanet row for Istanbul', () => {
+    // Diyanet-derived press timetable for Istanbul, 14 August 2026 (UTC+3):
+    // sabah 04:29, öğle 13:14, akşam 20:11, yatsı 21:41. adhan documents its
+    // Turkey preset as an approximation of Diyanet; this pins the drift.
+    const settings: PrayerSettings = { method: 'Turkey', madhab: 'shafi' };
+    const { entries } = getDayTimetable(
+      { latitude: 41.005, longitude: 28.977 },
+      settings,
+      new Date(Date.UTC(2026, 7, 14, 12, 0, 0)),
+    );
+    const at = (slot: string) =>
+      entries.find((entry) => entry.slot === slot)!.time.getTime();
+
+    const published = {
+      fajr: Date.UTC(2026, 7, 14, 1, 29),
+      dhuhr: Date.UTC(2026, 7, 14, 10, 14),
+      maghrib: Date.UTC(2026, 7, 14, 17, 11),
+      isha: Date.UTC(2026, 7, 14, 18, 41),
+    };
+
+    for (const [slot, expected] of Object.entries(published)) {
+      expect(Math.abs(at(slot) - expected)).toBeLessThanOrEqual(60_000);
+    }
+  });
+
   it('reproduces the Umm al-Qura rule that Isha is 90 minutes after Maghrib', () => {
     const settings: PrayerSettings = { method: 'UmmAlQura', madhab: 'shafi' };
     const { entries } = getDayTimetable(MAKKAH, settings, AUG_9_2026);

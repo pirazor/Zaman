@@ -63,6 +63,8 @@ export interface SyncOptions {
   prayerSettings: PrayerSettings;
   language: Language;
   timeFormat: TimeFormat;
+  /** City zone for a manual city, so reminder text shows that city's clock. */
+  timeZone?: string;
   reminderMinutes: number;
   enabled: boolean;
   now?: Date;
@@ -105,7 +107,12 @@ export async function syncReminders(options: SyncOptions): Promise<number> {
         }),
         body: t('notification_body', {
           prayer: prayerName,
-          time: formatTime(reminder.prayerTime, options.timeFormat, options.language),
+          time: formatTime(
+            reminder.prayerTime,
+            options.timeFormat,
+            options.language,
+            options.timeZone,
+          ),
         }),
         sound: 'default',
         data: { slot: reminder.slot, prayerTime: reminder.prayerTime.toISOString() },

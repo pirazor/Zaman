@@ -1,4 +1,4 @@
-import { defaultTimeFormat, formatTime } from '../src/lib/time';
+import { dateInTimeZone, defaultTimeFormat, formatTime } from '../src/lib/time';
 
 /**
  * Dates are built from local components (`new Date(y, m, d, h, min)`), so the
@@ -35,15 +35,40 @@ describe('formatTime', () => {
 });
 
 describe('defaultTimeFormat', () => {
-  it('uses a 12-hour clock where that is the convention', () => {
-    expect(defaultTimeFormat('US')).toBe('12h');
-    expect(defaultTimeFormat('EG')).toBe('12h');
-    expect(defaultTimeFormat('au')).toBe('12h');
+  it('defaults every region to the 24-hour clock', () => {
+    // Timetables are published in 24-hour time; 12-hour remains a setting.
+    expect(defaultTimeFormat('US')).toBe('24h');
+    expect(defaultTimeFormat('TR')).toBe('24h');
+    expect(defaultTimeFormat('EG')).toBe('24h');
+    expect(defaultTimeFormat(undefined)).toBe('24h');
+  });
+});
+
+describe('timezone-aware rendering', () => {
+  // 12:00 UTC on a fixed date: 15:00 in Istanbul (UTC+3), 08:00 in New York
+  // (UTC-4, summer time).
+  const noonUTC = new Date(Date.UTC(2026, 7, 10, 12, 0, 0));
+
+  it('formats a moment on another city’s wall clock', () => {
+    expect(formatTime(noonUTC, '24h', 'en', 'Europe/Istanbul')).toBe('15:00');
+    expect(formatTime(noonUTC, '24h', 'en', 'America/New_York')).toBe('08:00');
+    expect(formatTime(noonUTC, '12h', 'en', 'America/New_York')).toBe('8:00 AM');
   });
 
-  it('uses a 24-hour clock elsewhere, including when the region is unknown', () => {
-    expect(defaultTimeFormat('TR')).toBe('24h');
-    expect(defaultTimeFormat('DE')).toBe('24h');
-    expect(defaultTimeFormat(undefined)).toBe('24h');
+  it('falls back to the device clock for an unknown zone', () => {
+    expect(formatTime(noonUTC, '24h', 'en', 'Not/AZone')).toBe(
+      formatTime(noonUTC, '24h', 'en'),
+    );
+  });
+
+  it('resolves the calendar day the city is actually in', () => {
+    // 23:30 in New York on the 10th is already the 11th in Istanbul.
+    const lateNY = new Date(Date.UTC(2026, 7, 11, 3, 30, 0));
+    expect(dateInTimeZone(lateNY, 'Europe/Istanbul').getDate()).toBe(11);
+    expect(dateInTimeZone(lateNY, 'America/New_York').getDate()).toBe(10);
+  });
+
+  it('returns the input unchanged without a zone', () => {
+    expect(dateInTimeZone(noonUTC, undefined)).toBe(noonUTC);
   });
 });

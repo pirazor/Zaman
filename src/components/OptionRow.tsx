@@ -60,14 +60,14 @@ export function OptionRow({
           value={toggle.value}
           onValueChange={toggle.onChange}
           disabled={disabled}
-          trackColor={{ true: colors.primary, false: colors.border }}
+          trackColor={{ true: colors.primaryBright, false: colors.border }}
           thumbColor={colors.surface}
           // The row already carries the label; announcing it twice is noise.
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
         />
       ) : selected ? (
-        <MaterialCommunityIcons name="check" size={28} color={colors.primary} />
+        <MaterialCommunityIcons name="check" size={28} color={colors.primaryBright} />
       ) : null}
     </View>
   );

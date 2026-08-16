@@ -42,6 +42,23 @@ describe('the city database', () => {
     }
   });
 
+  it('gives every city a real IANA timezone', () => {
+    for (const city of CITIES) {
+      // An unknown zone throws here, so this catches typos in the data.
+      expect(() => new Intl.DateTimeFormat('en-US', { timeZone: city.timezone })).not.toThrow();
+      expect(city.timezone).toMatch(/^[A-Za-z_]+\/[A-Za-z_/]+$/);
+    }
+  });
+
+  it('places flagship cities in their correct zones', () => {
+    expect(cityById('istanbul')?.timezone).toBe('Europe/Istanbul');
+    expect(cityById('new-york')?.timezone).toBe('America/New_York');
+    expect(cityById('makkah')?.timezone).toBe('Asia/Riyadh');
+    expect(cityById('tehran')?.timezone).toBe('Asia/Tehran');
+    expect(cityById('delhi')?.timezone).toBe('Asia/Kolkata');
+    expect(cityById('phoenix')?.timezone).toBe('America/Phoenix');
+  });
+
   it('pairs each authority with its home cities', () => {
     expect(cityById('istanbul')?.method).toBe('Turkey');
     expect(cityById('new-york')?.method).toBe('NorthAmerica');

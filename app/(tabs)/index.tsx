@@ -17,7 +17,7 @@ import {
   type Position,
   type PrayerSettings,
 } from '../../src/lib/prayer';
-import { formatGregorianDate, formatHijriDate } from '../../src/lib/time';
+import { dateInTimeZone, formatGregorianDate, formatHijriDate } from '../../src/lib/time';
 import { useApp } from '../../src/state/AppProvider';
 import { spacing } from '../../src/theme';
 
@@ -39,19 +39,21 @@ function Timetable({
   position: Position;
   prayerSettings: PrayerSettings;
 }) {
-  const { place, t, colors, language, isRTL, refreshLocation } = useApp();
+  const { place, t, colors, language, isRTL, refreshLocation, timeZone } = useApp();
   const now = useNow();
   const [refreshing, setRefreshing] = useState(false);
 
-  // Prayer times only change at midnight, so the solar calculation is keyed on
-  // the calendar day. The one-second tick that drives the countdown then costs
-  // nothing but a subtraction.
-  const dayKey = now.toDateString();
+  // The timetable belongs to the chosen city's calendar day — which near
+  // midnight is not necessarily the phone's. Prayer times only change at that
+  // day boundary, so the solar calculation is keyed on it and the one-second
+  // tick that drives the countdown costs nothing but a subtraction.
+  const zoneDay = dateInTimeZone(now, timeZone);
+  const dayKey = zoneDay.toDateString();
 
   const { timetable, tomorrowFajr } = useMemo(
     () => ({
-      timetable: getDayTimetable(position, prayerSettings, now),
-      tomorrowFajr: getTomorrowFajr(position, prayerSettings, now),
+      timetable: getDayTimetable(position, prayerSettings, zoneDay),
+      tomorrowFajr: getTomorrowFajr(position, prayerSettings, zoneDay),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [position.latitude, position.longitude, prayerSettings, dayKey],
@@ -59,7 +61,7 @@ function Timetable({
 
   const next = selectNextPrayer(timetable, tomorrowFajr, now);
   const current = selectCurrentPrayer(timetable, now);
-  const hijri = formatHijriDate(now, language);
+  const hijri = formatHijriDate(now, language, timeZone);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -84,7 +86,7 @@ function Timetable({
 
       <View style={styles.dates}>
         <Text variant="heading" weight="700">
-          {formatGregorianDate(now, language)}
+          {formatGregorianDate(now, language, timeZone)}
         </Text>
         {hijri ? (
           <Text variant="body" color={colors.textMuted}>

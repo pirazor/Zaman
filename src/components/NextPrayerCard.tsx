@@ -22,10 +22,10 @@ export interface NextPrayerCardProps {
  * openings it is the only thing the user came to see.
  */
 export function NextPrayerCard({ next, msRemaining }: NextPrayerCardProps) {
-  const { colors, t, timeFormat, isRTL, language } = useApp();
+  const { colors, t, timeFormat, isRTL, language, timeZone } = useApp();
 
   const name = t(`prayer_${next.slot}`);
-  const at = formatTime(next.time, timeFormat, language);
+  const at = formatTime(next.time, timeFormat, language, timeZone);
 
   const segments = splitRemaining(msRemaining);
   const spoken = describeRemaining(language, segments);

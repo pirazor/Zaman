@@ -73,6 +73,11 @@ interface AppContextValue {
   locationStatus: LocationStatus;
   /** Set when the user picked a city by hand instead of using GPS. */
   manualCity: City | undefined;
+  /**
+   * IANA zone the timetable should be read in: the chosen city's own zone, or
+   * `undefined` for the device clock when location is automatic.
+   */
+  timeZone: string | undefined;
 
   setLanguage: (language: Language) => void;
   /** Chooses a city by id, or `undefined` to return to automatic location. */
@@ -195,6 +200,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       prayerSettings,
       language,
       timeFormat,
+      timeZone: manualCity?.timezone,
       reminderMinutes: state.reminderMinutes,
       enabled: state.notificationsEnabled,
     });
@@ -232,6 +238,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       position,
       locationStatus,
       manualCity,
+      timeZone: manualCity?.timezone,
       setLanguage: (next) => update({ language: next }),
       setManualCity: (cityId) => update({ manualCityId: cityId }),
       setMethod: (next) => update({ method: next }),
