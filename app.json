@@ -92,6 +92,9 @@
         }
       ]
     ],
+    "updates": {
+      "url": "https://u.expo.dev/32b02186-c306-4f73-94f7-2ed2b3e69c5e"
+    },
     "experiments": {
       "typedRoutes": true
     },
