@@ -31,6 +31,25 @@ export interface LocationResult {
  * known position when a fresh fix is slow — indoors this is the difference
  * between instant times and a blank screen.
  */
+/**
+ * How long to wait for a fresh fix before settling for less. Onboarding sits
+ * behind this call, and on GPS-less hardware (Wi-Fi-only iPads) a position can
+ * take arbitrarily long or never arrive — the flow must not hang on it.
+ */
+const FIX_TIMEOUT_MS = 8000;
+
+/** Reverse geocoding needs the network; a slow lookup must not block either. */
+const GEOCODE_TIMEOUT_MS = 4000;
+
+function within<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    promise
+      .then((value) => { clearTimeout(timer); resolve(value); })
+      .catch(() => { clearTimeout(timer); resolve(fallback); });
+  });
+}
+
 export async function captureLocation(): Promise<LocationResult> {
   let permission = await Location.getForegroundPermissionsAsync();
 
@@ -49,11 +68,15 @@ export async function captureLocation(): Promise<LocationResult> {
   try {
     const lastKnown = await Location.getLastKnownPositionAsync({ maxAge: 60 * 60 * 1000 });
 
-    const fresh = await Location.getCurrentPositionAsync({
-      // City-level precision is all prayer times need, and it resolves far
-      // faster and with less battery than a high-accuracy GPS lock.
-      accuracy: Location.Accuracy.Balanced,
-    }).catch(() => null);
+    const fresh = await within(
+      Location.getCurrentPositionAsync({
+        // City-level precision is all prayer times need, and it resolves far
+        // faster and with less battery than a high-accuracy GPS lock.
+        accuracy: Location.Accuracy.Balanced,
+      }),
+      FIX_TIMEOUT_MS,
+      null,
+    );
 
     const position = fresh ?? lastKnown;
     if (!position) return { status: 'unavailable' };
@@ -64,7 +87,7 @@ export async function captureLocation(): Promise<LocationResult> {
       capturedAt: Date.now(),
     };
 
-    return { status: 'granted', place: await describe(place) };
+    return { status: 'granted', place: await within(describe(place), GEOCODE_TIMEOUT_MS, place) };
   } catch {
     return { status: 'unavailable' };
   }
