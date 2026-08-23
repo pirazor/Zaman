@@ -20,7 +20,7 @@
       "ar": "./locales/ar.json"
     },
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "com.connectedwise.zaman",
       "buildNumber": "1",
       "config": {

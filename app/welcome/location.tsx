@@ -12,22 +12,23 @@ import { spacing } from '../../src/theme';
 /**
  * Step two: location.
  *
- * The permission is requested only after this screen has explained, in plain
- * words, what it is for and that nothing leaves the phone. Users who decline
- * still reach the app; the home screen offers the prompt again.
+ * This screen only explains, in plain words, what location is for and that it
+ * never leaves the phone. The single Continue button then always presents the
+ * system permission dialog — the decision itself belongs to that dialog, per
+ * App Review guideline 5.1.1(iv): a neutral button label, and no way to slip
+ * past the request. Declining there is fully honoured; the app works with a
+ * manually chosen city instead.
  */
 export default function AllowLocation() {
   const { t, colors, refreshLocation } = useApp();
   const router = useRouter();
   const [requesting, setRequesting] = useState(false);
 
-  const next = () => router.push('/welcome/reminders');
-
   const request = async () => {
     setRequesting(true);
     await refreshLocation();
     setRequesting(false);
-    next();
+    router.push('/welcome/reminders');
   };
 
   return (
@@ -48,12 +49,7 @@ export default function AllowLocation() {
       </View>
 
       <View style={styles.footer}>
-        <Button
-          label={t('onboarding_locationAllow')}
-          onPress={request}
-          loading={requesting}
-        />
-        <Button label={t('onboarding_skip')} variant="quiet" onPress={next} />
+        <Button label={t('onboarding_continue')} onPress={request} loading={requesting} />
       </View>
     </Screen>
   );

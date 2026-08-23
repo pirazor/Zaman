@@ -121,12 +121,9 @@ const en = {
   onboarding_locationTitle: 'Allow your location',
   onboarding_locationBody:
     'Prayer times and the Qibla depend on where you are. Zaman works this out on your phone and never sends it anywhere.',
-  onboarding_locationAllow: 'Allow location',
   onboarding_notificationTitle: 'Reminders before the adhan',
   onboarding_notificationBody:
     'Zaman can send you a quiet reminder 15 minutes before each prayer, so you are never caught out.',
-  onboarding_notificationAllow: 'Turn on reminders',
-  onboarding_skip: 'Not now',
 
   notification_title: '{prayer} in {minutes} minutes',
   notification_body: '{prayer} begins at {time}.',
@@ -253,12 +250,9 @@ const tr: Translations = {
   onboarding_locationTitle: 'Konumunuza izin verin',
   onboarding_locationBody:
     'Namaz vakitleri ve kıble bulunduğunuz yere bağlıdır. Zaman bunu telefonunuzda hesaplar ve hiçbir yere göndermez.',
-  onboarding_locationAllow: 'Konuma izin ver',
   onboarding_notificationTitle: 'Ezandan önce hatırlatma',
   onboarding_notificationBody:
     'Zaman, her namazdan 15 dakika önce size sessiz bir hatırlatma gönderebilir.',
-  onboarding_notificationAllow: 'Hatırlatmaları aç',
-  onboarding_skip: 'Şimdi değil',
 
   notification_title: '{prayer} vaktine {minutes} dakika',
   notification_body: '{prayer} vakti {time} itibarıyla giriyor.',
@@ -383,11 +377,8 @@ const ar: Translations = {
   onboarding_locationTitle: 'اسمح بالوصول إلى موقعك',
   onboarding_locationBody:
     'تعتمد أوقات الصلاة والقبلة على مكانك. يحسب زمان ذلك على هاتفك ولا يرسله إلى أي جهة.',
-  onboarding_locationAllow: 'السماح بالموقع',
   onboarding_notificationTitle: 'تنبيه قبل الأذان',
   onboarding_notificationBody: 'يمكن لزمان تنبيهك بهدوء قبل كل صلاة بخمس عشرة دقيقة.',
-  onboarding_notificationAllow: 'تشغيل التنبيهات',
-  onboarding_skip: 'ليس الآن',
 
   notification_title: '{prayer} بعد {minutes} دقيقة',
   notification_body: 'يدخل وقت {prayer} في {time}.',

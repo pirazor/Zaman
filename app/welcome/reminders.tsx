@@ -21,19 +21,15 @@ export default function AllowReminders() {
   // navigator, which moves to the tabs on its own — see app/_layout.tsx.
   const finish = () => completeOnboarding();
 
+  // A neutral Continue that always presents the system dialog — the same
+  // 5.1.1(iv) shape as the location step. The dialog is where the user
+  // decides; a refusal is honoured by leaving reminders off.
   const enable = async () => {
     setRequesting(true);
     const permission = await requestNotificationPermission();
     setRequesting(false);
 
-    // Respect a refusal: leaving the preference on would show "reminders are
-    // on" in Settings while nothing ever arrived.
     setNotificationsEnabled(permission === 'granted');
-    finish();
-  };
-
-  const skip = () => {
-    setNotificationsEnabled(false);
     finish();
   };
 
@@ -55,12 +51,7 @@ export default function AllowReminders() {
       </View>
 
       <View style={styles.footer}>
-        <Button
-          label={t('onboarding_notificationAllow')}
-          onPress={enable}
-          loading={requesting}
-        />
-        <Button label={t('onboarding_skip')} variant="quiet" onPress={skip} />
+        <Button label={t('onboarding_continue')} onPress={enable} loading={requesting} />
       </View>
     </Screen>
   );
