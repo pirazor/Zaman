@@ -11,8 +11,8 @@ export default function WelcomeLayout() {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: colors.background },
-        // No swipe-back: each step must be completed or explicitly skipped, so
-        // a user cannot end up half-configured by an accidental gesture.
+        // No swipe-back: each step must be completed, so a user cannot end up
+        // half-configured by an accidental gesture.
         gestureEnabled: false,
       }}
     />
