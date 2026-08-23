@@ -185,11 +185,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [update]);
 
   // Capture a fix on launch, reusing a recent one so the timetable is on screen
-  // immediately rather than after a GPS round trip. With a manual city chosen
-  // there is nothing to capture — and no permission prompt to spring.
+  // immediately rather than after a GPS round trip. Strictly gated on
+  // onboarding being complete: on a fresh install this effect would otherwise
+  // race the welcome flow and spring the system location dialog over the
+  // language screen — consuming iOS's one-time prompt before the explanation
+  // screen's Continue could present it, which is both a 5.1.1 violation and
+  // exactly the "missing location permission request" App Review reported.
+  // During onboarding, the location step itself performs the first capture.
   const didAutoLocate = useRef(false);
   useEffect(() => {
-    if (!ready || didAutoLocate.current) return;
+    if (!ready || !state.onboarded || didAutoLocate.current) return;
     didAutoLocate.current = true;
 
     if (state.manualCityId) return;
@@ -199,7 +204,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     void refreshLocation();
-  }, [ready, state.manualCityId, state.place, refreshLocation]);
+  }, [ready, state.onboarded, state.manualCityId, state.place, refreshLocation]);
 
   // Keep the reminder queue in step with everything it depends on. Re-running
   // on each change is cheap and is what guarantees reminders never reflect a
