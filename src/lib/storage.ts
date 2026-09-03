@@ -5,7 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Language } from '../i18n/translations';
-import type { CalculationMethodKey, MadhabKey, Position } from './prayer';
+import type { CalculationMethodKey, Position } from './prayer';
 import type { TimeFormat } from './time';
 
 const KEY = 'zaman.state.v1';
@@ -26,7 +26,6 @@ export interface PersistedState {
   language?: Language;
   /** Explicit choice; `undefined` means "derive from the user's region". */
   method?: CalculationMethodKey;
-  madhab: MadhabKey;
   timeFormat?: TimeFormat;
   notificationsEnabled: boolean;
   reminderMinutes: number;
@@ -44,7 +43,6 @@ export interface PersistedState {
 
 export const DEFAULT_STATE: PersistedState = {
   onboarded: false,
-  madhab: 'shafi',
   notificationsEnabled: true,
   reminderMinutes: 15,
   secondCityEnabled: false,
@@ -54,7 +52,11 @@ export async function loadState(): Promise<PersistedState> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     if (!raw) return DEFAULT_STATE;
-    return { ...DEFAULT_STATE, ...(JSON.parse(raw) as Partial<PersistedState>) };
+    const stored = JSON.parse(raw) as Partial<PersistedState> & { madhab?: unknown };
+    // The Asr choice was removed after 1.0.0: Asr now follows the method's
+    // authority. Drop the stale key rather than carrying it forever.
+    delete stored.madhab;
+    return { ...DEFAULT_STATE, ...stored };
   } catch {
     // A corrupt or unreadable store must not stop the app from opening; the
     // user simply sees defaults again.

@@ -28,13 +28,13 @@ export interface SecondCityRowProps {
  * body size, nothing below label size.
  */
 export function SecondCityRow({ now, onPressSecond, onPressPrimary }: SecondCityRowProps) {
-  const { colors, t, isRTL, language, timeFormat, place, madhab, secondCity } = useApp();
+  const { colors, t, isRTL, language, timeFormat, place, secondCity } = useApp();
 
   const placeLabel = place?.label ?? t('home_unknownPlace');
 
   const second = secondCity
     ? (() => {
-        const next = nextPrayerForCity(secondCity, madhab, now);
+        const next = nextPrayerForCity(secondCity, now);
         const segments = splitRemaining(next.time.getTime() - now.getTime());
         return {
           name: secondCity.names[language],

@@ -55,6 +55,11 @@ export const SELECTABLE_METHODS = [
 ] as const satisfies readonly (keyof typeof CalculationMethod)[];
 
 export type CalculationMethodKey = (typeof SELECTABLE_METHODS)[number];
+
+/**
+ * The two Asr conventions: `shafi` is the first shadow length (Shafi‘i, Maliki
+ * and Hanbali, and what most authorities print), `hanafi` the second.
+ */
 export type MadhabKey = 'shafi' | 'hanafi';
 
 export interface Position {
@@ -62,9 +67,12 @@ export interface Position {
   longitude: number;
 }
 
+/**
+ * Everything the calculation depends on besides place and date. There is no
+ * Asr choice: each authority publishes one Asr, and the method carries it.
+ */
 export interface PrayerSettings {
   method: CalculationMethodKey;
-  madhab: MadhabKey;
 }
 
 export interface PrayerEntry {
@@ -101,7 +109,9 @@ const METHOD_BY_REGION: Record<string, CalculationMethodKey> = {
   IN: 'Karachi',
   BD: 'Karachi',
   AF: 'Karachi',
-  LK: 'Karachi',
+  // Sri Lanka's Muslims are largely Shafi‘i and its timetables print the
+  // first-shadow Asr, so it must not inherit Karachi's Hanafi Asr.
+  LK: 'MuslimWorldLeague',
   AE: 'Dubai',
   KW: 'Kuwait',
   QA: 'Qatar',
@@ -121,34 +131,42 @@ export function defaultMethodForRegion(region: string | undefined): CalculationM
 }
 
 /**
- * Authorities whose published timetable fixes the Asr convention.
+ * The Asr convention each authority publishes.
  *
- * Diyanet prints a single İkindi, computed at the first shadow length (the
- * Imameyn opinion within the Hanafi school), and every mosque in Türkiye calls
- * the adhan by it. Under that method the Asr setting must not move the time:
- * a user in Türkiye who chose "Hanafi" — the country's own madhab — would
- * otherwise see an Asr close to an hour after the adhan they hear.
+ * An Asr choice used to sit in Settings next to the method, and it was a trap:
+ * Diyanet prints the first-shadow İkindi although Türkiye is Hanafi, so a
+ * Turkish user who tapped "Hanafi" saw an Asr an hour after the adhan every
+ * mosque in the country calls. The authority's timetable is the whole point
+ * of choosing the authority, so the method now carries its Asr as well.
+ *
+ * Only the Karachi method departs from the first shadow: the timetables of
+ * Pakistan, India, Bangladesh and Afghanistan all print the Hanafi Asr.
  */
-const MADHAB_FIXED_BY_METHOD: Partial<Record<CalculationMethodKey, MadhabKey>> = {
+const ASR_CONVENTION_BY_METHOD: Record<CalculationMethodKey, MadhabKey> = {
+  MuslimWorldLeague: 'shafi',
   Turkey: 'shafi',
+  Egyptian: 'shafi',
+  UmmAlQura: 'shafi',
+  Karachi: 'hanafi',
+  NorthAmerica: 'shafi',
+  Dubai: 'shafi',
+  Kuwait: 'shafi',
+  Qatar: 'shafi',
+  Singapore: 'shafi',
+  Tehran: 'shafi',
+  MoonsightingCommittee: 'shafi',
 };
 
-/** True when the method's authority publishes one Asr, so the setting has no effect. */
-export function methodFixesAsr(method: CalculationMethodKey): boolean {
-  return MADHAB_FIXED_BY_METHOD[method] !== undefined;
-}
-
-/** The convention Asr is actually computed with: the authority's where it fixes one, else the user's. */
-export function effectiveMadhab(method: CalculationMethodKey, madhab: MadhabKey): MadhabKey {
-  return MADHAB_FIXED_BY_METHOD[method] ?? madhab;
+/** The Asr convention the method's authority publishes. */
+export function asrConventionFor(method: CalculationMethodKey): MadhabKey {
+  return ASR_CONVENTION_BY_METHOD[method] ?? 'shafi';
 }
 
 function buildParameters(position: Position, settings: PrayerSettings) {
   const factory = CalculationMethod[settings.method] ?? CalculationMethod.MuslimWorldLeague;
   const params = factory();
 
-  params.madhab =
-    effectiveMadhab(settings.method, settings.madhab) === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi;
+  params.madhab = asrConventionFor(settings.method) === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi;
 
   // Above roughly 48° latitude the sun may never reach the twilight angle that
   // defines Fajr and Isha. These two rules keep the timetable sane there, and

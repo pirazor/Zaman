@@ -14,7 +14,6 @@ import {
   getDayTimetable,
   getTomorrowFajr,
   selectNextPrayer,
-  type MadhabKey,
   type UpcomingPrayer,
 } from './prayer';
 import { dateInTimeZone } from './time';
@@ -22,14 +21,12 @@ import { dateInTimeZone } from './time';
 /**
  * The next prayer for a city, from that city's own calendar day.
  *
- * The madhab is the user's setting (a Hanafi traveller stays Hanafi
- * everywhere, except where the city's authority publishes a single Asr — see
- * `effectiveMadhab`); the method is the city's, so İstanbul reads Diyanet even
- * when the user's own timetable is ISNA.
+ * The method is the city's own authority's, so İstanbul reads Diyanet even
+ * when the user's own timetable is ISNA — and with it that authority's Asr.
  */
-export function nextPrayerForCity(city: City, madhab: MadhabKey, now: Date): UpcomingPrayer {
+export function nextPrayerForCity(city: City, now: Date): UpcomingPrayer {
   const position = cityPosition(city);
-  const settings = { method: city.method, madhab };
+  const settings = { method: city.method };
   const cityDay = dateInTimeZone(now, city.timezone);
 
   return selectNextPrayer(

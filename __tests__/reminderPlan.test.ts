@@ -7,7 +7,7 @@ import {
 import { getUpcomingPrayers, type PrayerSettings } from '../src/lib/prayer';
 
 const ISTANBUL = { latitude: 41.0082, longitude: 28.9784 };
-const SETTINGS: PrayerSettings = { method: 'Turkey', madhab: 'shafi' };
+const SETTINGS: PrayerSettings = { method: 'Turkey' };
 
 const at = (hours: number, minutes = 0) =>
   new Date(Date.UTC(2026, 7, 9, hours, minutes, 0));

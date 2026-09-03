@@ -1,12 +1,12 @@
 import {
+  asrConventionFor,
   defaultMethodForRegion,
-  effectiveMadhab,
   getDayTimetable,
-  methodFixesAsr,
   getTomorrowFajr,
   getUpcomingPrayers,
   NOTIFIABLE_SLOTS,
   PRAYER_SLOTS,
+  SELECTABLE_METHODS,
   selectCurrentPrayer,
   selectNextPrayer,
   type DayTimetable,
@@ -31,7 +31,7 @@ describe('getDayTimetable', () => {
   it('matches the Diyanet timetable published for Istanbul', () => {
     // Istanbul is UTC+3 in August, so these are 04:20, 06:01, 13:15, 17:05,
     // 20:18 and 21:51 local — the times Diyanet prints for this date.
-    const settings: PrayerSettings = { method: 'Turkey', madhab: 'shafi' };
+    const settings: PrayerSettings = { method: 'Turkey' };
 
     expect(times(getDayTimetable(ISTANBUL, settings, AUG_9_2026))).toEqual({
       fajr: '2026-08-09T01:20:00.000Z',
@@ -47,7 +47,7 @@ describe('getDayTimetable', () => {
     // Diyanet-derived press timetable for Istanbul, 14 August 2026 (UTC+3):
     // sabah 04:29, öğle 13:14, akşam 20:11, yatsı 21:41. adhan documents its
     // Turkey preset as an approximation of Diyanet; this pins the drift.
-    const settings: PrayerSettings = { method: 'Turkey', madhab: 'shafi' };
+    const settings: PrayerSettings = { method: 'Turkey' };
     const { entries } = getDayTimetable(
       { latitude: 41.005, longitude: 28.977 },
       settings,
@@ -69,7 +69,7 @@ describe('getDayTimetable', () => {
   });
 
   it('reproduces the Umm al-Qura rule that Isha is 90 minutes after Maghrib', () => {
-    const settings: PrayerSettings = { method: 'UmmAlQura', madhab: 'shafi' };
+    const settings: PrayerSettings = { method: 'UmmAlQura' };
     const { entries } = getDayTimetable(MAKKAH, settings, AUG_9_2026);
 
     const maghrib = entries.find((entry) => entry.slot === 'maghrib')!.time;
@@ -79,7 +79,7 @@ describe('getDayTimetable', () => {
   });
 
   it('returns all six times in chronological order', () => {
-    const settings: PrayerSettings = { method: 'MuslimWorldLeague', madhab: 'shafi' };
+    const settings: PrayerSettings = { method: 'MuslimWorldLeague' };
     const { entries } = getDayTimetable(ISTANBUL, settings, AUG_9_2026);
 
     expect(entries.map((entry) => entry.slot)).toEqual([...PRAYER_SLOTS]);
@@ -89,7 +89,7 @@ describe('getDayTimetable', () => {
   });
 
   it('marks sunrise as the only entry that is not a prayer', () => {
-    const settings: PrayerSettings = { method: 'MuslimWorldLeague', madhab: 'shafi' };
+    const settings: PrayerSettings = { method: 'MuslimWorldLeague' };
     const { entries } = getDayTimetable(ISTANBUL, settings, AUG_9_2026);
 
     expect(entries.filter((entry) => !entry.isPrayer).map((entry) => entry.slot)).toEqual([
@@ -98,21 +98,34 @@ describe('getDayTimetable', () => {
     expect(NOTIFIABLE_SLOTS).not.toContain('sunrise');
   });
 
-  it('places the Hanafi Asr later than the Shafi one where the authority leaves it open', () => {
-    const method = 'MuslimWorldLeague';
-    const shafi = getDayTimetable(ISTANBUL, { method, madhab: 'shafi' }, AUG_9_2026);
-    const hanafi = getDayTimetable(ISTANBUL, { method, madhab: 'hanafi' }, AUG_9_2026);
+  it('uses the Hanafi Asr under the Karachi method and the first shadow elsewhere', () => {
+    // Karachi and the Muslim World League differ only in their twilight
+    // angles, so any Asr difference between them is the convention alone:
+    // roughly an hour at Karachi's latitude in September.
+    const KARACHI = { latitude: 24.86, longitude: 67.0 };
+    const day = new Date(Date.UTC(2026, 8, 2, 12, 0, 0));
+    const asrOf = (method: PrayerSettings['method']) =>
+      getDayTimetable(KARACHI, { method }, day).entries.find((entry) => entry.slot === 'asr')!.time.getTime();
 
-    const asrOf = (timetable: DayTimetable) =>
-      timetable.entries.find((entry) => entry.slot === 'asr')!.time.getTime();
-
-    expect(asrOf(hanafi)).toBeGreaterThan(asrOf(shafi));
+    const gapMinutes = (asrOf('Karachi') - asrOf('MuslimWorldLeague')) / 60_000;
+    expect(gapMinutes).toBeGreaterThan(40);
+    expect(gapMinutes).toBeLessThan(90);
   });
 
-  it('lands on the published Diyanet İkindi under either Asr setting', () => {
+  it('lands on the Asr that Islamic Foundation Bangladesh published for Dhaka', () => {
+    // Islamic Foundation's row for Dhaka, 2 September 2026: Asr 16:28 (UTC+6).
+    // That is the Hanafi Asr; the first-shadow rule would say 15:25.
+    const DHAKA = { latitude: 23.81, longitude: 90.41 };
+    const { entries } = getDayTimetable(DHAKA, { method: 'Karachi' }, new Date(Date.UTC(2026, 8, 2, 12, 0, 0)));
+    const asr = entries.find((entry) => entry.slot === 'asr')!.time.getTime();
+
+    expect(Math.abs(asr - Date.UTC(2026, 8, 2, 10, 28))).toBeLessThanOrEqual(60_000);
+  });
+
+  it('lands on the published Diyanet İkindi', () => {
     // Rows Diyanet published for 2 September 2026 (UTC+3). Diyanet prints the
-    // first-shadow İkindi although Türkiye is Hanafi, so the "Hanafi" setting
-    // must not move Asr — as shipped, it put it 57 minutes after the adhan.
+    // first-shadow İkindi although Türkiye is Hanafi; the Hanafi rule would
+    // put Asr 57 minutes after the adhan, which is what an Asr setting once did.
     const rows = [
       {
         position: { latitude: 41.005, longitude: 28.977 }, // İstanbul
@@ -126,28 +139,19 @@ describe('getDayTimetable', () => {
     const day = new Date(Date.UTC(2026, 8, 2, 12, 0, 0));
 
     for (const { position, published } of rows) {
-      for (const madhab of ['shafi', 'hanafi'] as const) {
-        const { entries } = getDayTimetable(position, { method: 'Turkey', madhab }, day);
-        for (const [slot, [hour, minute]] of Object.entries(published)) {
-          const actual = entries.find((entry) => entry.slot === slot)!.time.getTime();
-          const expected = Date.UTC(2026, 8, 2, hour - 3, minute);
-          expect(Math.abs(actual - expected)).toBeLessThanOrEqual(60_000);
-        }
+      const { entries } = getDayTimetable(position, { method: 'Turkey' }, day);
+      for (const [slot, [hour, minute]] of Object.entries(published)) {
+        const actual = entries.find((entry) => entry.slot === slot)!.time.getTime();
+        const expected = Date.UTC(2026, 8, 2, hour - 3, minute);
+        expect(Math.abs(actual - expected)).toBeLessThanOrEqual(60_000);
       }
     }
-  });
-
-  it('produces an identical Diyanet timetable under both Asr settings', () => {
-    const shafi = getDayTimetable(ISTANBUL, { method: 'Turkey', madhab: 'shafi' }, AUG_9_2026);
-    const hanafi = getDayTimetable(ISTANBUL, { method: 'Turkey', madhab: 'hanafi' }, AUG_9_2026);
-
-    expect(times(hanafi)).toEqual(times(shafi));
   });
 
   it('still produces valid times inside the Arctic circle in midsummer', () => {
     // Above ~66° the sun never reaches the twilight angle that defines Fajr and
     // Isha, which is what the high-latitude and polar-circle rules exist for.
-    const settings: PrayerSettings = { method: 'MuslimWorldLeague', madhab: 'shafi' };
+    const settings: PrayerSettings = { method: 'MuslimWorldLeague' };
     const { entries } = getDayTimetable(
       TROMSO,
       settings,
@@ -161,7 +165,7 @@ describe('getDayTimetable', () => {
 });
 
 describe('selectNextPrayer', () => {
-  const settings: PrayerSettings = { method: 'Turkey', madhab: 'shafi' };
+  const settings: PrayerSettings = { method: 'Turkey' };
   const timetable = getDayTimetable(ISTANBUL, settings, AUG_9_2026);
   const tomorrowFajr = getTomorrowFajr(ISTANBUL, settings, AUG_9_2026);
 
@@ -198,7 +202,7 @@ describe('selectNextPrayer', () => {
 });
 
 describe('selectCurrentPrayer', () => {
-  const settings: PrayerSettings = { method: 'Turkey', madhab: 'shafi' };
+  const settings: PrayerSettings = { method: 'Turkey' };
   const timetable = getDayTimetable(ISTANBUL, settings, AUG_9_2026);
 
   it('reports the period in force', () => {
@@ -213,7 +217,7 @@ describe('selectCurrentPrayer', () => {
 });
 
 describe('getUpcomingPrayers', () => {
-  const settings: PrayerSettings = { method: 'Turkey', madhab: 'shafi' };
+  const settings: PrayerSettings = { method: 'Turkey' };
 
   it('lists five prayers a day, in order, excluding sunrise', () => {
     const from = new Date(Date.UTC(2026, 7, 9, 0, 0, 0));
@@ -235,19 +239,19 @@ describe('getUpcomingPrayers', () => {
   });
 });
 
-describe('effectiveMadhab', () => {
-  it('is fixed to the published convention under Diyanet', () => {
-    expect(methodFixesAsr('Turkey')).toBe(true);
-    expect(effectiveMadhab('Turkey', 'hanafi')).toBe('shafi');
-    expect(effectiveMadhab('Turkey', 'shafi')).toBe('shafi');
+describe('asrConventionFor', () => {
+  it('follows what each authority publishes', () => {
+    expect(asrConventionFor('Turkey')).toBe('shafi');
+    expect(asrConventionFor('Karachi')).toBe('hanafi');
+    expect(asrConventionFor('MuslimWorldLeague')).toBe('shafi');
+    expect(asrConventionFor('NorthAmerica')).toBe('shafi');
+    expect(asrConventionFor('UmmAlQura')).toBe('shafi');
   });
 
-  it('follows the user everywhere else', () => {
-    expect(methodFixesAsr('MuslimWorldLeague')).toBe(false);
-    expect(methodFixesAsr('Karachi')).toBe(false);
-    expect(effectiveMadhab('MuslimWorldLeague', 'hanafi')).toBe('hanafi');
-    expect(effectiveMadhab('Karachi', 'hanafi')).toBe('hanafi');
-    expect(effectiveMadhab('NorthAmerica', 'shafi')).toBe('shafi');
+  it('is defined for every selectable method', () => {
+    for (const method of SELECTABLE_METHODS) {
+      expect(['shafi', 'hanafi']).toContain(asrConventionFor(method));
+    }
   });
 });
 
@@ -258,6 +262,11 @@ describe('defaultMethodForRegion', () => {
     expect(defaultMethodForRegion('SA')).toBe('UmmAlQura');
     expect(defaultMethodForRegion('EG')).toBe('Egyptian');
     expect(defaultMethodForRegion('PK')).toBe('Karachi');
+    expect(defaultMethodForRegion('BD')).toBe('Karachi');
+  });
+
+  it('keeps Sri Lanka off the Hanafi Asr that Karachi carries', () => {
+    expect(defaultMethodForRegion('LK')).toBe('MuslimWorldLeague');
   });
 
   it('is case insensitive', () => {

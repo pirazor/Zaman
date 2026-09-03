@@ -16,7 +16,7 @@ import {
   REMINDER_MINUTE_OPTIONS,
   type NotificationPermission,
 } from '../../src/lib/notifications';
-import { defaultMethodForRegion, methodFixesAsr, SELECTABLE_METHODS } from '../../src/lib/prayer';
+import { defaultMethodForRegion, SELECTABLE_METHODS } from '../../src/lib/prayer';
 import { useApp } from '../../src/state/AppProvider';
 import { fontSize, MIN_TOUCH_TARGET, radius, spacing } from '../../src/theme';
 
@@ -36,8 +36,6 @@ export default function SettingsScreen() {
     method,
     methodIsAutomatic,
     setMethod,
-    madhab,
-    setMadhab,
     timeFormat,
     setTimeFormat,
     notificationsEnabled,
@@ -162,35 +160,7 @@ export default function SettingsScreen() {
         </Card>
       </View>
 
-      <View>
-        <SectionTitle>{t('settings_madhab')}</SectionTitle>
-        <Card>
-          {methodFixesAsr(method) ? (
-            // Diyanet publishes one İkindi. Offering the choice here had
-            // Hanafi users in Türkiye an hour behind the adhan; the setting
-            // is kept and applies again as soon as the method changes.
-            <OptionRow
-              label={t('settings_madhab_fixed', { method: t(`method_${method}`) })}
-              description={t('settings_madhab_fixedDesc')}
-              selected
-            />
-          ) : (
-            <>
-              <OptionRow
-                label={t('settings_madhab_shafi')}
-                selected={madhab === 'shafi'}
-                onPress={() => setMadhab('shafi')}
-              />
-              <OptionRow
-                label={t('settings_madhab_hanafi')}
-                selected={madhab === 'hanafi'}
-                onPress={() => setMadhab('hanafi')}
-              />
-            </>
-          )}
-        </Card>
-      </View>
-
+      {/* No Asr choice: each authority publishes one Asr, and the method carries it. */}
       <View>
         <SectionTitle>{t('settings_calculation')}</SectionTitle>
         <Card>

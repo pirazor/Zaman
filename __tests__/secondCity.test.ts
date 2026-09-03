@@ -11,7 +11,7 @@ describe('nextPrayerForCity', () => {
 
   it("rolls to tomorrow's Fajr after the city's Isha", () => {
     const istanbul = cityById('istanbul')!;
-    const next = nextPrayerForCity(istanbul, 'shafi', now);
+    const next = nextPrayerForCity(istanbul,now);
 
     expect(next.slot).toBe('fajr');
     expect(next.isTomorrow).toBe(true);
@@ -25,7 +25,7 @@ describe('nextPrayerForCity', () => {
     // Fajr (isTomorrow false); computed on the device's day it would roll
     // over and claim tomorrow. Same instant either way, different meaning.
     const beforeFajr = new Date(Date.UTC(2026, 7, 10, 23, 0, 0));
-    const next = nextPrayerForCity(cityById('istanbul')!, 'shafi', beforeFajr);
+    const next = nextPrayerForCity(cityById('istanbul')!,beforeFajr);
 
     expect(next.slot).toBe('fajr');
     expect(next.isTomorrow).toBe(false);
@@ -36,8 +36,8 @@ describe('nextPrayerForCity', () => {
     // Makkah must come out on Umm al-Qura's fixed 90-minute Isha.
     const makkah = cityById('makkah')!;
     const midday = new Date(Date.UTC(2026, 7, 10, 12, 0, 0));
-    const maghrib = nextPrayerForCity(makkah, 'shafi', new Date(Date.UTC(2026, 7, 10, 15, 0)));
-    const isha = nextPrayerForCity(makkah, 'shafi', new Date(maghrib.time.getTime() + 60_000));
+    const maghrib = nextPrayerForCity(makkah,new Date(Date.UTC(2026, 7, 10, 15, 0)));
+    const isha = nextPrayerForCity(makkah,new Date(maghrib.time.getTime() + 60_000));
 
     expect(maghrib.slot).toBe('maghrib');
     expect(isha.slot).toBe('isha');
@@ -45,11 +45,11 @@ describe('nextPrayerForCity', () => {
     expect(midday.getTime()).toBeLessThan(maghrib.time.getTime());
   });
 
-  it("keeps a Turkish city on Diyanet's İkindi for a Hanafi user", () => {
+  it("keeps a Turkish city on Diyanet's İkindi", () => {
     // 2 Sep 2026 at 16:00 İstanbul (13:00 UTC). Diyanet published İkindi
     // 16:48; the Hanafi shadow rule would say 17:45, which no mosque there uses.
     const afternoon = new Date(Date.UTC(2026, 8, 2, 13, 0, 0));
-    const next = nextPrayerForCity(cityById('istanbul')!, 'hanafi', afternoon);
+    const next = nextPrayerForCity(cityById('istanbul')!, afternoon);
 
     expect(next.slot).toBe('asr');
     expect(Math.abs(next.time.getTime() - Date.UTC(2026, 8, 2, 13, 48))).toBeLessThanOrEqual(60_000);
@@ -58,7 +58,7 @@ describe('nextPrayerForCity', () => {
   it('keeps the countdown positive and under a day', () => {
     const cities = ['istanbul', 'new-york', 'tokyo', 'auckland', 'los-angeles'] as const;
     for (const id of cities) {
-      const next = nextPrayerForCity(cityById(id)!, 'shafi', now);
+      const next = nextPrayerForCity(cityById(id)!,now);
       expect(next.msRemaining).toBeGreaterThan(0);
       expect(next.msRemaining).toBeLessThan(24 * 3600e3);
     }

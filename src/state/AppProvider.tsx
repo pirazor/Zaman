@@ -30,7 +30,6 @@ import { syncReminders } from '../lib/notifications';
 import {
   defaultMethodForRegion,
   type CalculationMethodKey,
-  type MadhabKey,
   type PrayerSettings,
   type Position,
 } from '../lib/prayer';
@@ -61,7 +60,6 @@ interface AppContextValue {
   method: CalculationMethodKey;
   /** True when `method` is derived from the region rather than chosen. */
   methodIsAutomatic: boolean;
-  madhab: MadhabKey;
   prayerSettings: PrayerSettings;
   timeFormat: TimeFormat;
 
@@ -88,7 +86,6 @@ interface AppContextValue {
   setSecondCityEnabled: (enabled: boolean) => void;
   setSecondCity: (cityId: string) => void;
   setMethod: (method: CalculationMethodKey | undefined) => void;
-  setMadhab: (madhab: MadhabKey) => void;
   setTimeFormat: (format: TimeFormat) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
   setReminderMinutes: (minutes: number) => void;
@@ -169,10 +166,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     state.method ?? (manualCity ? manualCity.method : defaultMethodForRegion(region));
   const timeFormat = state.timeFormat ?? defaultTimeFormat(region);
 
-  const prayerSettings = useMemo<PrayerSettings>(
-    () => ({ method, madhab: state.madhab }),
-    [method, state.madhab],
-  );
+  const prayerSettings = useMemo<PrayerSettings>(() => ({ method }), [method]);
 
   const position = place ? toPosition(place) : undefined;
 
@@ -246,7 +240,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       region,
       method,
       methodIsAutomatic,
-      madhab: state.madhab,
       prayerSettings,
       timeFormat,
       notificationsEnabled: state.notificationsEnabled,
@@ -263,7 +256,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setSecondCityEnabled: (enabled) => update({ secondCityEnabled: enabled }),
       setSecondCity: (cityId) => update({ secondCityId: cityId }),
       setMethod: (next) => update({ method: next }),
-      setMadhab: (next) => update({ madhab: next }),
       setTimeFormat: (next) => update({ timeFormat: next }),
       setNotificationsEnabled: (next) => update({ notificationsEnabled: next }),
       setReminderMinutes: (next) => update({ reminderMinutes: next }),
