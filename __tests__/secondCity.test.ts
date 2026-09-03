@@ -45,6 +45,16 @@ describe('nextPrayerForCity', () => {
     expect(midday.getTime()).toBeLessThan(maghrib.time.getTime());
   });
 
+  it("keeps a Turkish city on Diyanet's İkindi for a Hanafi user", () => {
+    // 2 Sep 2026 at 16:00 İstanbul (13:00 UTC). Diyanet published İkindi
+    // 16:48; the Hanafi shadow rule would say 17:45, which no mosque there uses.
+    const afternoon = new Date(Date.UTC(2026, 8, 2, 13, 0, 0));
+    const next = nextPrayerForCity(cityById('istanbul')!, 'hanafi', afternoon);
+
+    expect(next.slot).toBe('asr');
+    expect(Math.abs(next.time.getTime() - Date.UTC(2026, 8, 2, 13, 48))).toBeLessThanOrEqual(60_000);
+  });
+
   it('keeps the countdown positive and under a day', () => {
     const cities = ['istanbul', 'new-york', 'tokyo', 'auckland', 'los-angeles'] as const;
     for (const id of cities) {

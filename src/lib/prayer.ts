@@ -120,11 +120,35 @@ export function defaultMethodForRegion(region: string | undefined): CalculationM
   return METHOD_BY_REGION[region.toUpperCase()] ?? 'MuslimWorldLeague';
 }
 
+/**
+ * Authorities whose published timetable fixes the Asr convention.
+ *
+ * Diyanet prints a single İkindi, computed at the first shadow length (the
+ * Imameyn opinion within the Hanafi school), and every mosque in Türkiye calls
+ * the adhan by it. Under that method the Asr setting must not move the time:
+ * a user in Türkiye who chose "Hanafi" — the country's own madhab — would
+ * otherwise see an Asr close to an hour after the adhan they hear.
+ */
+const MADHAB_FIXED_BY_METHOD: Partial<Record<CalculationMethodKey, MadhabKey>> = {
+  Turkey: 'shafi',
+};
+
+/** True when the method's authority publishes one Asr, so the setting has no effect. */
+export function methodFixesAsr(method: CalculationMethodKey): boolean {
+  return MADHAB_FIXED_BY_METHOD[method] !== undefined;
+}
+
+/** The convention Asr is actually computed with: the authority's where it fixes one, else the user's. */
+export function effectiveMadhab(method: CalculationMethodKey, madhab: MadhabKey): MadhabKey {
+  return MADHAB_FIXED_BY_METHOD[method] ?? madhab;
+}
+
 function buildParameters(position: Position, settings: PrayerSettings) {
   const factory = CalculationMethod[settings.method] ?? CalculationMethod.MuslimWorldLeague;
   const params = factory();
 
-  params.madhab = settings.madhab === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi;
+  params.madhab =
+    effectiveMadhab(settings.method, settings.madhab) === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi;
 
   // Above roughly 48° latitude the sun may never reach the twilight angle that
   // defines Fajr and Isha. These two rules keep the timetable sane there, and
