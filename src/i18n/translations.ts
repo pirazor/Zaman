@@ -121,7 +121,15 @@ const en = {
   onboarding_notificationTitle: 'Reminders before the adhan',
   onboarding_notificationBody:
     'Zaman can send you a quiet reminder 15 minutes before each prayer, so you are never caught out.',
+  onboarding_alarmsTitle: 'Reminders on time',
+  onboarding_alarmsBody:
+    'So that reminders arrive on time, Android needs your permission for Zaman to set alarms. Switch it on in the next screen, then come back.',
+  onboarding_alarmsOpen: 'Open settings',
+  onboarding_alarmsLater: 'Not now',
+  settings_alarmsNotice: 'Reminders may arrive late until Zaman is allowed to set alarms and reminders.',
+  settings_alarmsOpen: 'Allow on-time reminders',
 
+  notification_channel: 'Prayer reminders',
   notification_title: '{prayer} in {minutes} minutes',
   notification_body: '{prayer} begins at {time}.',
 
@@ -247,7 +255,15 @@ const tr: Translations = {
   onboarding_notificationTitle: 'Ezandan önce hatırlatma',
   onboarding_notificationBody:
     'Zaman, her namazdan 15 dakika önce size sessiz bir hatırlatma gönderebilir.',
+  onboarding_alarmsTitle: 'Hatırlatmalar tam vaktinde',
+  onboarding_alarmsBody:
+    'Hatırlatmaların zamanında gelmesi için Android, Zaman’ın alarm kurmasına izin vermenizi istiyor. Açılan ekranda izni açın, sonra geri dönün.',
+  onboarding_alarmsOpen: 'Ayarları aç',
+  onboarding_alarmsLater: 'Şimdi değil',
+  settings_alarmsNotice: 'Zaman’a alarm ve hatırlatıcı izni verilene kadar hatırlatmalar gecikebilir.',
+  settings_alarmsOpen: 'Zamanında hatırlatmaya izin ver',
 
+  notification_channel: 'Namaz hatırlatmaları',
   notification_title: '{prayer} vaktine {minutes} dakika',
   notification_body: '{prayer} vakti {time} itibarıyla giriyor.',
 
@@ -370,7 +386,15 @@ const ar: Translations = {
     'تعتمد أوقات الصلاة والقبلة على مكانك. يحسب زمان ذلك على هاتفك ولا يرسله إلى أي جهة.',
   onboarding_notificationTitle: 'تنبيه قبل الأذان',
   onboarding_notificationBody: 'يمكن لزمان تنبيهك بهدوء قبل كل صلاة بخمس عشرة دقيقة.',
+  onboarding_alarmsTitle: 'تنبيهات في وقتها',
+  onboarding_alarmsBody:
+    'لكي تصلك التنبيهات في وقتها، يحتاج أندرويد إلى إذنك لزمان بضبط المنبّهات. فعّل الإذن في الشاشة التالية ثم عُد إلى التطبيق.',
+  onboarding_alarmsOpen: 'فتح الإعدادات',
+  onboarding_alarmsLater: 'ليس الآن',
+  settings_alarmsNotice: 'قد تتأخر التنبيهات إلى أن تسمح لزمان بضبط المنبّهات والتذكيرات.',
+  settings_alarmsOpen: 'السماح بالتنبيه في وقته',
 
+  notification_channel: 'تنبيهات الصلاة',
   notification_title: '{prayer} بعد {minutes} دقيقة',
   notification_body: 'يدخل وقت {prayer} في {time}.',
 

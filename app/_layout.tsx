@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { I18nManager } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
@@ -7,7 +8,7 @@ import * as SystemUI from 'expo-system-ui';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppProvider, useApp } from '../src/state/AppProvider';
-import { ensureAndroidChannel } from '../src/lib/notifications';
+import { ensureNativeLayoutLTR } from '../src/lib/layoutDirection';
 
 // Reminders are the point of the app, so show them even while it is open —
 // a user staring at the countdown should still get the 15-minute warning.
@@ -23,9 +24,17 @@ Notifications.setNotificationHandler({
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  // Holds the splash screen while native mirroring is switched off, so a phone
+  // set to Arabic never shows a frame laid out in the wrong direction.
+  const [layoutReady, setLayoutReady] = useState(!I18nManager.isRTL);
+
   useEffect(() => {
-    void ensureAndroidChannel();
+    void ensureNativeLayoutLTR().then((reloading) => {
+      if (!reloading) setLayoutReady(true);
+    });
   }, []);
+
+  if (!layoutReady) return null;
 
   return (
     <SafeAreaProvider>

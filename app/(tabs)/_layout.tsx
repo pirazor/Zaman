@@ -1,6 +1,7 @@
 import React from 'react';
 import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { useApp } from '../../src/state/AppProvider';
@@ -13,6 +14,7 @@ import { fontSize, spacing } from '../../src/theme';
  */
 export default function TabsLayout() {
   const { colors, t } = useApp();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -25,8 +27,10 @@ export default function TabsLayout() {
           borderTopColor: colors.border,
           borderTopWidth: 1,
           // Tall enough to carry the icon, the gap below it and the label
-          // without the label crowding the bottom edge.
-          height: Platform.select({ ios: 98, default: 82 }),
+          // without the label crowding the bottom edge. The bar pads itself
+          // by the bottom inset, which an explicit height has to include:
+          // Android draws edge to edge, under its navigation bar.
+          height: Platform.select({ ios: 98, default: 82 + insets.bottom }),
           paddingTop: spacing.sm,
         },
         tabBarLabelStyle: {

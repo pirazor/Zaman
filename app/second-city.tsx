@@ -53,6 +53,7 @@ export default function SecondCitySheet() {
             placeholder={t('settings_searchCity')}
             placeholderTextColor={colors.textMuted}
             autoCorrect={false}
+            underlineColorAndroid="transparent"
             autoFocus
             returnKeyType="search"
             accessibilityLabel={t('settings_searchCity')}

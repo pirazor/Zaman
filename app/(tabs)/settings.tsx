@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Linking, StyleSheet, TextInput, View } from 'react-native';
+import { AppState, Linking, StyleSheet, TextInput, View } from 'react-native';
 import Constants from 'expo-constants';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
@@ -10,6 +10,7 @@ import { Screen } from '../../src/components/Screen';
 import { Text } from '../../src/components/Text';
 import { LANGUAGES, LANGUAGE_NAMES } from '../../src/i18n';
 import { searchCities } from '../../src/lib/cities';
+import { canScheduleExactAlarms, openExactAlarmSettings } from '../../src/lib/exactAlarms';
 import {
   getNotificationPermission,
   requestNotificationPermission,
@@ -54,12 +55,23 @@ export default function SettingsScreen() {
   } = useApp();
 
   const [permission, setPermission] = useState<NotificationPermission>('granted');
+  const [exactAlarms, setExactAlarms] = useState(canScheduleExactAlarms);
   const [locating, setLocating] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
   const [secondQuery, setSecondQuery] = useState('');
 
+  // Both are changed in the phone's own settings, so look again whenever the
+  // user comes back from there; this tab stays mounted the whole time.
   useEffect(() => {
-    void getNotificationPermission().then(setPermission);
+    const refresh = () => {
+      void getNotificationPermission().then(setPermission);
+      setExactAlarms(canScheduleExactAlarms());
+    };
+    refresh();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    return () => subscription.remove();
   }, []);
 
   const toggleNotifications = useCallback(
@@ -126,6 +138,19 @@ export default function SettingsScreen() {
               label={t('home_openSettings')}
               variant="secondary"
               onPress={() => void Linking.openSettings()}
+            />
+          </View>
+        ) : null}
+
+        {notificationsEnabled && permission === 'granted' && !exactAlarms ? (
+          <View style={styles.notice}>
+            <Text variant="caption" color={colors.warning}>
+              {t('settings_alarmsNotice')}
+            </Text>
+            <Button
+              label={t('settings_alarmsOpen')}
+              variant="secondary"
+              onPress={() => void openExactAlarmSettings()}
             />
           </View>
         ) : null}
@@ -213,6 +238,7 @@ export default function SettingsScreen() {
               placeholder={t('settings_searchCity')}
               placeholderTextColor={colors.textMuted}
               autoCorrect={false}
+              underlineColorAndroid="transparent"
               returnKeyType="search"
               accessibilityLabel={t('settings_searchCity')}
               style={[
@@ -272,6 +298,7 @@ export default function SettingsScreen() {
                   placeholder={t('settings_searchCity')}
                   placeholderTextColor={colors.textMuted}
                   autoCorrect={false}
+                  underlineColorAndroid="transparent"
                   returnKeyType="search"
                   accessibilityLabel={t('settings_searchCity')}
                   style={[

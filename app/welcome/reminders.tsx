@@ -1,20 +1,24 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { Button } from '../../src/components/Button';
 import { Screen } from '../../src/components/Screen';
 import { Text } from '../../src/components/Text';
+import { canScheduleExactAlarms } from '../../src/lib/exactAlarms';
 import { requestNotificationPermission } from '../../src/lib/notifications';
 import { useApp } from '../../src/state/AppProvider';
 import { spacing } from '../../src/theme';
 
 /**
  * Final step: reminders. Finishing here — by either route — is what marks the
- * app as set up, so this screen is never shown again.
+ * app as set up, so this screen is never shown again. The one exception is an
+ * Android phone that withholds exact alarms, which gets one more step first.
  */
 export default function AllowReminders() {
   const { t, colors, completeOnboarding, setNotificationsEnabled } = useApp();
+  const router = useRouter();
   const [requesting, setRequesting] = useState(false);
 
   // Marking the app as set up retires the welcome branch of the root
@@ -30,6 +34,13 @@ export default function AllowReminders() {
     setRequesting(false);
 
     setNotificationsEnabled(permission === 'granted');
+
+    // Reminders were just allowed, but Android 14 and later can still deliver
+    // them late; the next step asks for exact alarms. Always true elsewhere.
+    if (permission === 'granted' && !canScheduleExactAlarms()) {
+      router.push('/welcome/alarms');
+      return;
+    }
     finish();
   };
 

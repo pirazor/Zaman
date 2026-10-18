@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useColorScheme } from 'react-native';
+import { AppState, useColorScheme } from 'react-native';
 import * as Localization from 'expo-localization';
 
 import {
@@ -200,6 +200,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     void refreshLocation();
   }, [ready, state.onboarded, state.manualCityId, state.place, refreshLocation]);
 
+  // Counts returns to the foreground, each of which rebuilds the reminders: the
+  // queue only covers the next few days, a phone can keep the app suspended
+  // for longer than that, and on Android exact-alarm access granted in the
+  // phone's settings only applies to reminders scheduled after it.
+  const [foregroundCount, setForegroundCount] = useState(0);
+  useEffect(() => {
+    let previous = AppState.currentState;
+    const subscription = AppState.addEventListener('change', (next) => {
+      if (next === 'active' && previous !== 'active') setForegroundCount((count) => count + 1);
+      previous = next;
+    });
+    return () => subscription.remove();
+  }, []);
+
   // Keep the reminder queue in step with everything it depends on. Re-running
   // on each change is cheap and is what guarantees reminders never reflect a
   // stale location, language or calculation method.
@@ -226,6 +240,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     timeFormat,
     state.reminderMinutes,
     state.notificationsEnabled,
+    foregroundCount,
   ]);
 
   const value = useMemo<AppContextValue>(

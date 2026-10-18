@@ -20,12 +20,16 @@ export * from './reminderPlan';
 
 export const ANDROID_CHANNEL_ID = 'prayer-reminders';
 
-/** Creates the Android channel. No-op elsewhere. Safe to call repeatedly. */
-export async function ensureAndroidChannel(): Promise<void> {
+/**
+ * Creates the Android channel, or renames it to `name` — the label Android
+ * shows for it in the phone's notification settings. No-op elsewhere. Safe to
+ * call repeatedly.
+ */
+export async function ensureAndroidChannel(name: string): Promise<void> {
   if (Platform.OS !== 'android') return;
 
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
-    name: 'Prayer reminders',
+    name,
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 250, 250],
     lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
@@ -70,22 +74,34 @@ export interface SyncOptions {
   now?: Date;
 }
 
+let pendingSync: Promise<unknown> = Promise.resolve();
+
 /**
  * Rebuilds the reminder queue from scratch. Clearing first is deliberate: it
  * is the only way to guarantee stale reminders from an old location, language
  * or calculation method never fire.
  *
+ * Calls run one after another: two rebuilds interleaving their cancel and
+ * schedule steps would leave duplicate reminders behind.
+ *
  * Returns the number of reminders now queued.
  */
-export async function syncReminders(options: SyncOptions): Promise<number> {
+export function syncReminders(options: SyncOptions): Promise<number> {
+  const run = pendingSync.then(() => rebuildReminders(options));
+  pendingSync = run.catch(() => undefined);
+  return run;
+}
+
+async function rebuildReminders(options: SyncOptions): Promise<number> {
   const now = options.now ?? new Date();
+  const t = createTranslator(options.language);
 
   await cancelAllReminders();
 
   if (!options.enabled) return 0;
   if ((await getNotificationPermission()) !== 'granted') return 0;
 
-  await ensureAndroidChannel();
+  await ensureAndroidChannel(t('notification_channel'));
 
   const prayers = getUpcomingPrayers(
     options.position,
@@ -94,7 +110,6 @@ export async function syncReminders(options: SyncOptions): Promise<number> {
     SCHEDULE_HORIZON_DAYS,
   );
   const plan = planReminders(prayers, options.reminderMinutes, now);
-  const t = createTranslator(options.language);
 
   for (const reminder of plan) {
     const prayerName = t(`prayer_${reminder.slot}`);
