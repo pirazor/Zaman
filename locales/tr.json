@@ -1,5 +1,10 @@
 {
-  "CFBundleDisplayName": "Zaman",
-  "NSLocationWhenInUseUsageDescription": "Zaman, namaz vakitlerini ve kıble yönünü doğru hesaplamak için konumunuzu kullanır. Konumunuz telefonunuzdan asla çıkmaz.",
-  "NSMotionUsageDescription": "Zaman, kıbleyi göstermek için pusula sensörünü kullanır."
+  "ios": {
+    "CFBundleDisplayName": "Zaman",
+    "NSLocationWhenInUseUsageDescription": "Zaman, namaz vakitlerini ve kıble yönünü doğru hesaplamak için konumunuzu kullanır. Konumunuz telefonunuzdan asla çıkmaz.",
+    "NSMotionUsageDescription": "Zaman, kıbleyi göstermek için pusula sensörünü kullanır."
+  },
+  "android": {
+    "app_name": "Zaman"
+  }
 }
