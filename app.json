@@ -32,7 +32,7 @@
       }
     },
     "android": {
-      "package": "com.connectedwise.zaman",
+      "package": "com.eneskaraaslan.zaman",
       "versionCode": 1,
       "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {

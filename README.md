@@ -146,9 +146,9 @@ eas submit --platform all
 ```
 
 `eas build:configure` (or `eas init`) links the project to your Expo account
-and writes `extra.eas.projectId` into `app.json` — commit that change. Set
-`ios.bundleIdentifier` / `android.package` if `com.connectedwise.zaman` is not
-the intended identifier.
+and writes `extra.eas.projectId` into `app.json` — commit that change. The
+identifiers are permanent once published: the iOS app is
+`com.connectedwise.zaman` and the Android app `com.eneskaraaslan.zaman`.
 
 The store listing needs no paid tier: the app has no purchases, subscriptions or
 ads. `ios.config.usesNonExemptEncryption` is already declared `false`, which
